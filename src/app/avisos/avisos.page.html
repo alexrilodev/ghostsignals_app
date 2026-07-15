@@ -1,0 +1,62 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Avisos</ion-title>
+    @if (unreadCount > 0) {
+      <ion-button slot="end" fill="clear" (click)="markAllAsRead()">
+        Marcar todo leído
+      </ion-button>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Avisos</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  @if (notifications.length === 0) {
+    <div class="empty-state">
+      <ion-icon name="notifications-outline" class="empty-icon"></ion-icon>
+      <h2>Sin notificaciones</h2>
+      <p>Las notificaciones de señales cercanas aparecerán aquí</p>
+    </div>
+  } @else {
+    <div class="notifications-header">
+      <span class="notification-count">{{ notifications.length }} notificaciones</span>
+      <ion-button fill="clear" size="small" (click)="clearAll()">
+        Limpiar todo
+      </ion-button>
+    </div>
+
+    <ion-list>
+      @for (notification of notifications; track notification.id) {
+        <ion-item
+          [class.unread]="!notification.read"
+          (click)="markAsRead(notification)"
+          button
+        >
+          <ion-icon
+            [name]="notification.read ? 'notifications-outline' : 'notifications'"
+            [color]="notification.read ? 'medium' : 'primary'"
+            slot="start"
+          ></ion-icon>
+          <ion-label>
+            <h2>{{ notification.title }}</h2>
+            <p>{{ notification.body }}</p>
+            <p class="time-ago">{{ getTimeAgo(notification.receivedAt) }}</p>
+          </ion-label>
+          @if (!notification.read) {
+            <ion-badge color="primary" slot="end">Nuevo</ion-badge>
+          }
+        </ion-item>
+      }
+    </ion-list>
+  }
+</ion-content>

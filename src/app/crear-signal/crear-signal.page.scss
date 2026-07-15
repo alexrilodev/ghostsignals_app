@@ -1,0 +1,89 @@
+.crear-signal-container {
+  padding: 16px;
+}
+
+.signal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.photo-section {
+  margin-bottom: 8px;
+}
+
+.photo-preview {
+  position: relative;
+  width: 100%;
+  max-height: 300px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--ion-color-light);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .remove-photo {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    --color: white;
+    font-size: 24px;
+  }
+}
+
+.photo-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border: 2px dashed var(--ion-color-medium);
+  border-radius: 12px;
+  background: var(--ion-color-light);
+}
+
+.tags-section {
+  margin-top: 8px;
+}
+
+.tags-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  ion-chip {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.selected {
+      --background: var(--ion-color-primary);
+      --color: white;
+    }
+  }
+}
+
+.location-section {
+  margin-top: 8px;
+}
+
+ion-item {
+  --background: var(--ion-color-light);
+  border-radius: 8px;
+}
+
+ion-button[type="submit"] {
+  margin-top: 16px;
+}
+
+ion-spinner {
+  margin-right: 8px;
+}

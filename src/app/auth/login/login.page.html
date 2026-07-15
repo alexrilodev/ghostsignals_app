@@ -1,0 +1,95 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Iniciar Sesión</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1>Ghost Signals</h1>
+      <p>Inicia sesión para continuar</p>
+    </div>
+
+    <div class="social-buttons">
+      <ion-button
+        expand="block"
+        fill="outline"
+        (click)="loginWithGoogle()"
+        [disabled]="loadingGoogle || loadingApple"
+        class="google-button"
+      >
+        @if (loadingGoogle) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        Continuar con Google
+      </ion-button>
+
+      <ion-button
+        expand="block"
+        fill="outline"
+        (click)="loginWithApple()"
+        [disabled]="loadingGoogle || loadingApple"
+        class="apple-button"
+      >
+        @if (loadingApple) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        Continuar con Apple
+      </ion-button>
+    </div>
+
+    <div class="divider">
+      <span>o continua con email</span>
+    </div>
+
+    <form (ngSubmit)="login()" class="auth-form">
+      <ion-item>
+        <ion-label position="floating">Email</ion-label>
+        <ion-input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          autocomplete="email"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="floating">Contraseña</ion-label>
+        <ion-input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          autocomplete="current-password"
+        ></ion-input>
+      </ion-item>
+
+      @if (error) {
+        <ion-text color="danger" class="error-text">
+          <p>{{ error }}</p>
+        </ion-text>
+      }
+
+      <ion-button
+        type="submit"
+        expand="block"
+        [disabled]="loading"
+        class="auth-button"
+      >
+        @if (loading) {
+          <ion-spinner name="crescent"></ion-spinner>
+        } @else {
+          Iniciar Sesión
+        }
+      </ion-button>
+    </form>
+
+    <div class="auth-footer">
+      <ion-button fill="clear" routerLink="/registro">
+        ¿No tienes cuenta? Regístrate
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

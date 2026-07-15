@@ -1,0 +1,38 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Mapa</ion-title>
+    @if (loadingSignals) {
+      <ion-spinner name="crescent" slot="end"></ion-spinner>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <div class="map-container">
+    @if (loading) {
+      <div class="empty-state">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Obteniendo ubicación...</p>
+      </div>
+    } @else if (errorPermission) {
+      <div class="empty-state">
+        <ion-icon name="location-outline" class="empty-icon"></ion-icon>
+        <h2>Permiso de ubicación requerido</h2>
+        <p>Para ver las señales cercanas necesitamos acceso a tu ubicación</p>
+        <ion-button (click)="openSettings()">Abrir Ajustes</ion-button>
+      </div>
+    } @else {
+      <div id="map" class="map"></div>
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button routerLink="/tabs/crear-signal">
+          <ion-icon name="add"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
+    }
+  </div>
+</ion-content>

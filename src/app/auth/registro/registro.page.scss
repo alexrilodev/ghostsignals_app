@@ -1,0 +1,85 @@
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: 24px;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+
+  h1 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+  }
+
+  p {
+    margin: 0;
+    color: var(--ion-color-medium);
+  }
+}
+
+.social-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.google-button {
+  --border-color: #db4437;
+  --color: #db4437;
+
+  &:hover {
+    --background: rgba(219, 68, 55, 0.1);
+  }
+}
+
+.apple-button {
+  --border-color: #000;
+  --color: #000;
+
+  &:hover {
+    --background: rgba(0, 0, 0, 0.1);
+  }
+}
+
+.divider {
+  margin-bottom: 24px;
+
+  ion-divider {
+    ion-label {
+      font-size: 12px;
+      color: var(--ion-color-medium);
+      padding: 0 16px;
+    }
+  }
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-text {
+  text-align: center;
+  font-size: 14px;
+
+  p {
+    margin: 8px 0 0 0;
+  }
+}
+
+.auth-button {
+  margin-top: 8px;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 16px;
+}

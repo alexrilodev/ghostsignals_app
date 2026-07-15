@@ -1,0 +1,72 @@
+import { Injectable, inject } from '@angular/core';
+import {
+  Auth,
+  User,
+  user,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  OAuthProvider,
+  signInWithCredential,
+} from '@angular/fire/auth';
+import { Observable, from, of, switchMap } from 'rxjs';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AuthService {
+  private auth = inject(Auth);
+
+  user$: Observable<User | null> = user(this.auth);
+
+  get currentUser(): User | null {
+    return this.auth.currentUser;
+  }
+
+  get uid(): string | null {
+    return this.auth.currentUser?.uid ?? null;
+  }
+
+  async login(email: string, password: string): Promise<User> {
+    const credential = await signInWithEmailAndPassword(this.auth, email, password);
+    return credential.user;
+  }
+
+  async register(email: string, password: string): Promise<User> {
+    const credential = await createUserWithEmailAndPassword(this.auth, email, password);
+    return credential.user;
+  }
+
+  async loginWithGoogle(): Promise<User> {
+    const result = await FirebaseAuthentication.signInWithGoogle();
+    const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+    const userCredential = await signInWithCredential(this.auth, credential);
+    return userCredential.user;
+  }
+
+  async loginWithApple(): Promise<User> {
+    const result = await FirebaseAuthentication.signInWithApple();
+    const credential = new OAuthProvider('apple.com').credential({
+      idToken: result.credential?.idToken,
+      rawNonce: result.credential?.nonce,
+    });
+    const userCredential = await signInWithCredential(this.auth, credential);
+    return userCredential.user;
+  }
+
+  async logout(): Promise<void> {
+    await FirebaseAuthentication.signOut();
+    await signOut(this.auth);
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    await sendPasswordResetEmail(this.auth, email);
+  }
+
+  isAuthenticated(): Observable<boolean> {
+    return this.user$.pipe(switchMap(user => of(!!user)));
+  }
+}
