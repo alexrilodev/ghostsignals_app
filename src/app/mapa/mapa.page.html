@@ -7,32 +7,30 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-    <ion-refresher-content pullingText="Desliza para actualizar" refreshingText="Actualizando...">
-    </ion-refresher-content>
-  </ion-refresher>
+<div class="map-page">
+  <div id="map" class="map"></div>
 
-  <div class="map-container">
-    @if (loading) {
+  @if (loading) {
+    <div class="overlay">
       <div class="empty-state">
         <ion-spinner name="crescent"></ion-spinner>
         <p>Obteniendo ubicación...</p>
       </div>
-    } @else if (errorPermission) {
+    </div>
+  } @else if (errorPermission) {
+    <div class="overlay">
       <div class="empty-state">
         <ion-icon name="location-outline" class="empty-icon"></ion-icon>
         <h2>Permiso de ubicación requerido</h2>
         <p>Para ver las señales cercanas necesitamos acceso a tu ubicación</p>
         <ion-button (click)="openSettings()">Abrir Ajustes</ion-button>
       </div>
-    } @else {
-      <div id="map" class="map"></div>
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button routerLink="/tabs/crear-signal">
-          <ion-icon name="add"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
-    }
-  </div>
-</ion-content>
+    </div>
+  }
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed" style="--offset-bottom: 72px;">
+    <ion-fab-button routerLink="/tabs/crear-signal">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</div>

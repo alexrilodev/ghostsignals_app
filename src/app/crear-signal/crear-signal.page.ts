@@ -21,6 +21,7 @@ import {
   ToastController,
 } from '@ionic/angular/standalone';
 import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 import { CameraService, CapturedImage } from '../services/camera.service';
 import { StorageService } from '../services/storage.service';
 import { SupabaseService, Signal } from '../services/supabase.service';
@@ -89,17 +90,29 @@ export class CrearSignalPage implements OnInit {
 
   async getCurrentPosition() {
     try {
-      const permission = await Geolocation.requestPermissions();
-      if (permission.location !== 'granted') {
-        this.loadingLocation = false;
-        return;
+      if (Capacitor.isNativePlatform()) {
+        const permission = await Geolocation.requestPermissions();
+        if (permission.location !== 'granted') {
+          this.loadingLocation = false;
+          return;
+        }
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        this.latitude = position.coords.latitude;
+        this.longitude = position.coords.longitude;
+      } else {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        });
+        this.latitude = position.coords.latitude;
+        this.longitude = position.coords.longitude;
       }
-
-      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-      this.latitude = position.coords.latitude;
-      this.longitude = position.coords.longitude;
       this.loadingLocation = false;
     } catch (error) {
+      console.error('Error getting location:', error);
       this.loadingLocation = false;
     }
   }
@@ -171,18 +184,20 @@ export class CrearSignalPage implements OnInit {
       signalCreated = true;
       signalId = signal.id;
 
-      let imageUrl = '';
       if (this.capturedImage) {
-        imageUrl = await this.storageService.uploadSignalImage(
-          this.capturedImage.base64String,
-          this.capturedImage.format
-        );
+        try {
+          const imageUrl = await this.storageService.uploadSignalImage(
+            this.capturedImage.base64String,
+            this.capturedImage.format
+          );
+          await this.supabaseService.updateSignalImage(signal.id, imageUrl);
+        } catch (imgError) {
+          console.error('Error uploading image (signal still created):', imgError);
+        }
       }
 
-      await this.supabaseService.updateSignalImage(signal.id, imageUrl);
-
       this.showToast('Señal creada exitosamente');
-      this.router.navigateByUrl('/tabs/mapa');
+      await this.router.navigate(['/tabs/mapa']);
     } catch (error) {
       console.error('Error creating signal:', error);
 

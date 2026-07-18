@@ -10,6 +10,7 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithCredential,
+  signInWithPopup,
 } from '@angular/fire/auth';
 import { Observable, of, switchMap } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
@@ -41,14 +42,15 @@ export class AuthService {
   }
 
   async loginWithGoogle(): Promise<User> {
-    if (!Capacitor.isNativePlatform()) {
-      throw new Error('Google Sign-In solo está disponible en dispositivos móviles');
+    if (Capacitor.isNativePlatform()) {
+      const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+      const userCredential = await signInWithCredential(this.auth, credential);
+      return userCredential.user;
     }
-    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
-    const result = await FirebaseAuthentication.signInWithGoogle();
-    const credential = GoogleAuthProvider.credential(result.credential?.idToken);
-    const userCredential = await signInWithCredential(this.auth, credential);
-    return userCredential.user;
+    const result = await signInWithPopup(this.auth, new GoogleAuthProvider());
+    return result.user;
   }
 
   async loginWithApple(): Promise<User> {

@@ -5,17 +5,15 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonContent,
   IonButton,
   IonIcon,
   IonSpinner,
-  IonRefresher,
-  IonRefresherContent,
   IonFab,
   IonFabButton,
 } from '@ionic/angular/standalone';
 import { Geolocation } from '@capacitor/geolocation';
 import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 import { MapService } from '../services/map.service';
 import { SupabaseService, NearbySignal } from '../services/supabase.service';
 
@@ -29,12 +27,9 @@ import { SupabaseService, NearbySignal } from '../services/supabase.service';
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonContent,
     IonButton,
     IonIcon,
     IonSpinner,
-    IonRefresher,
-    IonRefresherContent,
     IonFab,
     IonFabButton,
   ],
@@ -59,49 +54,78 @@ export class MapaPage implements OnInit, OnDestroy {
     this.getCurrentPosition();
   }
 
+  ionViewDidEnter() {
+    if (this.mapInitialized) {
+      this.scheduleInvalidateSize();
+    } else if (this.latitude !== null && this.longitude !== null) {
+      this.initMap();
+    }
+  }
+
   ngOnDestroy() {
     this.mapService.ngOnDestroy();
   }
 
   async getCurrentPosition() {
     try {
-      const permission = await Geolocation.requestPermissions();
-      if (permission.location !== 'granted') {
-        this.errorPermission = true;
-        this.loading = false;
-        return;
+      if (Capacitor.isNativePlatform()) {
+        const permission = await Geolocation.requestPermissions();
+        if (permission.location !== 'granted') {
+          this.errorPermission = true;
+          this.loading = false;
+          return;
+        }
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        this.latitude = position.coords.latitude;
+        this.longitude = position.coords.longitude;
+      } else {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        });
+        this.latitude = position.coords.latitude;
+        this.longitude = position.coords.longitude;
       }
-
-      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
-      this.latitude = position.coords.latitude;
-      this.longitude = position.coords.longitude;
       this.loading = false;
-
-      this.initMap();
+      if (!this.mapInitialized && this.latitude !== null) {
+        this.initMap();
+      }
     } catch (error) {
+      console.error('Error getting location:', error);
       this.errorPermission = true;
       this.loading = false;
     }
   }
 
-  private async initMap() {
+  private initMap() {
     if (this.latitude === null || this.longitude === null || this.mapInitialized) {
       return;
     }
 
-    setTimeout(() => {
-      this.mapService.initializeMap('map', this.latitude!, this.longitude!);
-      this.mapService.setUserMarker(this.latitude!, this.longitude!);
-      this.mapInitialized = true;
+    const mapEl = document.getElementById('map');
+    if (!mapEl) return;
 
-      this.mapService.onMapMove(() => {
-        this.ngZone.run(() => {
-          this.loadNearbySignals();
-        });
+    this.mapService.initializeMap('map', this.latitude!, this.longitude!);
+    this.mapService.setUserMarker(this.latitude!, this.longitude!);
+    this.mapInitialized = true;
+
+    this.mapService.onMapMove(() => {
+      this.ngZone.run(() => {
+        this.loadNearbySignals();
       });
+    });
 
-      this.loadNearbySignals();
-    }, 100);
+    this.scheduleInvalidateSize();
+    this.loadNearbySignals();
+  }
+
+  private scheduleInvalidateSize() {
+    setTimeout(() => this.mapService.invalidateSize(), 100);
+    setTimeout(() => this.mapService.invalidateSize(), 300);
+    setTimeout(() => this.mapService.invalidateSize(), 1000);
   }
 
   async loadNearbySignals() {
@@ -158,8 +182,4 @@ export class MapaPage implements OnInit, OnDestroy {
     await Browser.open({ url: 'app-settings:' });
   }
 
-  async handleRefresh(event: CustomEvent) {
-    await this.loadNearbySignals();
-    (event.target as HTMLIonRefresherElement).complete();
-  }
 }

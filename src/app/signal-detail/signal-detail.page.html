@@ -1,0 +1,59 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/explorar"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle de Señal</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading) {
+    <div class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (signal) {
+    <div class="detail-content">
+      @if (signal.image_url) {
+        <div class="signal-image">
+          <img [src]="signal.image_url" [alt]="signal.title">
+        </div>
+      }
+
+      <div class="signal-info">
+        <div class="signal-header">
+          <h1>{{ signal.title }}</h1>
+          <span class="signal-time">{{ getTimeAgo(signal.created_at) }}</span>
+        </div>
+
+        @if (signal.description) {
+          <div class="signal-description">
+            <p>{{ signal.description }}</p>
+          </div>
+        }
+
+        <div class="signal-tags">
+          @for (tag of signal.tags; track tag) {
+            <ion-chip [outline]="true">{{ tag }}</ion-chip>
+          }
+        </div>
+
+        <div class="signal-meta">
+          <div class="meta-item">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>{{ signal.latitude.toFixed(4) }}, {{ signal.longitude.toFixed(4) }}</span>
+          </div>
+          <div class="meta-item">
+            <ion-icon name="time-outline"></ion-icon>
+            <span>{{ formatDate(signal.created_at) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">
+      <ion-icon name="warning-outline" class="empty-icon"></ion-icon>
+      <p>Señal no encontrada</p>
+    </div>
+  }
+</ion-content>

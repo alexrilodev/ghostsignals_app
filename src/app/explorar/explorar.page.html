@@ -5,12 +5,21 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content pullingText="Desliza para actualizar" refreshingText="Actualizando...">
+    </ion-refresher-content>
+  </ion-refresher>
+
   <ion-header collapse="condense">
     <ion-toolbar>
       <ion-title size="large">Explorar</ion-title>
     </ion-toolbar>
     <ion-toolbar>
-      <ion-searchbar placeholder="Buscar señales..."></ion-searchbar>
+      <ion-searchbar
+        placeholder="Buscar señales..."
+        (ionInput)="onSearch($event)"
+        [debounce]="300"
+      ></ion-searchbar>
     </ion-toolbar>
   </ion-header>
 
@@ -18,16 +27,55 @@
     <div class="tags-section">
       <h3>Tags populares</h3>
       <div class="tags-container">
-        <ion-chip>Arte</ion-chip>
-        <ion-chip>Música</ion-chip>
-        <ion-chip>Comida</ion-chip>
-        <ion-chip>Deporte</ion-chip>
-        <ion-chip>Cultura</ion-chip>
+        @for (tag of availableTags; track tag) {
+          <ion-chip
+            [outline]="!isTagSelected(tag)"
+            (click)="toggleTag(tag)"
+            [class.selected]="isTagSelected(tag)"
+          >
+            {{ tag }}
+          </ion-chip>
+        }
       </div>
     </div>
 
-    <div class="signals-list">
-      <p class="empty-text">No hay señales para mostrar</p>
+    <div class="signals-section">
+      <h3>Señales recientes</h3>
+
+      @if (loading) {
+        <div class="loading-container">
+          <ion-spinner name="crescent"></ion-spinner>
+        </div>
+      } @else if (filteredSignals.length === 0) {
+        <div class="empty-state">
+          <ion-icon name="search-outline" class="empty-icon"></ion-icon>
+          <p>No hay señales para mostrar</p>
+        </div>
+      } @else {
+        <div class="signals-list">
+          @for (signal of filteredSignals; track signal.id) {
+            <div class="signal-card" (click)="openSignalDetail(signal.id)">
+              <div class="signal-header">
+                <div class="signal-title-area">
+                  @if (signal.image_url) {
+                    <img class="signal-thumbnail" [src]="signal.image_url" [alt]="signal.title">
+                  }
+                  <h4>{{ signal.title }}</h4>
+                </div>
+                <span class="signal-time">{{ getTimeAgo(signal.created_at) }}</span>
+              </div>
+              @if (signal.description) {
+                <p class="signal-description">{{ signal.description }}</p>
+              }
+              <div class="signal-tags">
+                @for (tag of signal.tags; track tag) {
+                  <ion-chip class="signal-tag" [outline]="true">{{ tag }}</ion-chip>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   </div>
 </ion-content>

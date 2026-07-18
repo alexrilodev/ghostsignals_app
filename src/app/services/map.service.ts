@@ -8,6 +8,7 @@ export class MapService implements OnDestroy {
   private map: L.Map | null = null;
   private markers: L.Marker[] = [];
   private userMarker: L.Marker | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   private readonly defaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -30,10 +31,15 @@ export class MapService implements OnDestroy {
 
   initializeMap(containerId: string, latitude: number, longitude: number): L.Map {
     if (this.map) {
-      this.map.remove();
+      this.destroy();
     }
 
-    this.map = L.map(containerId, {
+    const container = document.getElementById(containerId);
+    if (!container) {
+      throw new Error(`Map container #${containerId} not found`);
+    }
+
+    this.map = L.map(container, {
       center: [latitude, longitude],
       zoom: 15,
       zoomControl: false,
@@ -45,6 +51,15 @@ export class MapService implements OnDestroy {
     }).addTo(this.map);
 
     L.control.zoom({ position: 'bottomright' }).addTo(this.map);
+
+    let resizeTimeout: any;
+    this.resizeObserver = new ResizeObserver(() => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.map?.invalidateSize();
+      }, 50);
+    });
+    this.resizeObserver.observe(container);
 
     return this.map;
   }
@@ -104,10 +119,18 @@ export class MapService implements OnDestroy {
     this.map?.invalidateSize();
   }
 
-  ngOnDestroy(): void {
+  private destroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
     if (this.map) {
       this.map.remove();
       this.map = null;
     }
+  }
+
+  ngOnDestroy() {
+    this.destroy();
   }
 }

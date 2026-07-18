@@ -8,43 +8,62 @@
 -- 1. Enable PostGIS extension
 CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA extensions;
 
--- 2. Create signals table
+-- 2. Drop existing table if it exists (clean setup)
+DROP TABLE IF EXISTS public.signals CASCADE;
+
+-- 3. Create signals table
 CREATE TABLE public.signals (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  user_id TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT DEFAULT '',
   image_url TEXT DEFAULT '',
-  location GEOMETRY(Point, 4326) NOT NULL,
+  location GEOMETRY(Point, 4326),
   latitude FLOAT NOT NULL,
   longitude FLOAT NOT NULL,
   tags TEXT[] DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
--- 3. Enable Row Level Security
+-- 4. Auto-populate location geometry from lat/lng
+CREATE OR REPLACE FUNCTION public.set_location_from_coords()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.location := ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER signals_set_location
+  BEFORE INSERT OR UPDATE ON public.signals
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_location_from_coords();
+
+-- 4. Enable Row Level Security
 ALTER TABLE public.signals ENABLE ROW LEVEL SECURITY;
 
--- 4. Create RLS policies
+-- 5. Create RLS policies (permissive for Firebase Auth)
 CREATE POLICY "Signals are viewable by everyone"
   ON public.signals FOR SELECT USING (true);
 
-CREATE POLICY "Users can insert their own signals"
-  ON public.signals FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can insert signals"
+  ON public.signals FOR INSERT WITH CHECK (true);
 
-CREATE POLICY "Users can update their own signals"
-  ON public.signals FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can update signals"
+  ON public.signals FOR UPDATE USING (true);
 
-CREATE POLICY "Users can delete their own signals"
-  ON public.signals FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete signals"
+  ON public.signals FOR DELETE USING (true);
 
--- 5. Create indexes
+-- 6. Create indexes
 CREATE INDEX signals_location_idx ON public.signals USING GIST (location);
 CREATE INDEX signals_user_id_idx ON public.signals (user_id);
 CREATE INDEX signals_tags_idx ON public.signals USING GIN (tags);
 CREATE INDEX signals_created_at_idx ON public.signals (created_at DESC);
 
--- 6. Create RPC function
+-- 7. Create RPC function
+DROP FUNCTION IF EXISTS public.get_nearby_signals(FLOAT, FLOAT, FLOAT);
+
 CREATE OR REPLACE FUNCTION public.get_nearby_signals(
   p_latitude FLOAT,
   p_longitude FLOAT,
@@ -52,7 +71,7 @@ CREATE OR REPLACE FUNCTION public.get_nearby_signals(
 )
 RETURNS TABLE (
   id UUID,
-  user_id UUID,
+  user_id TEXT,
   title TEXT,
   description TEXT,
   image_url TEXT,
@@ -95,7 +114,8 @@ BEGIN
 END;
 $$;
 
--- 7. Grant permissions
+-- 8. Grant permissions
+GRANT EXECUTE ON FUNCTION public.get_nearby_signals(FLOAT, FLOAT, FLOAT) TO anon;
 GRANT EXECUTE ON FUNCTION public.get_nearby_signals(FLOAT, FLOAT, FLOAT) TO authenticated;
 
 -- ============================================
