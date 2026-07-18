@@ -11,8 +11,8 @@ import {
   OAuthProvider,
   signInWithCredential,
 } from '@angular/fire/auth';
-import { Observable, from, of, switchMap } from 'rxjs';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { Observable, of, switchMap } from 'rxjs';
+import { Capacitor } from '@capacitor/core';
 
 @Injectable({
   providedIn: 'root',
@@ -41,6 +41,10 @@ export class AuthService {
   }
 
   async loginWithGoogle(): Promise<User> {
+    if (!Capacitor.isNativePlatform()) {
+      throw new Error('Google Sign-In solo está disponible en dispositivos móviles');
+    }
+    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
     const result = await FirebaseAuthentication.signInWithGoogle();
     const credential = GoogleAuthProvider.credential(result.credential?.idToken);
     const userCredential = await signInWithCredential(this.auth, credential);
@@ -48,6 +52,10 @@ export class AuthService {
   }
 
   async loginWithApple(): Promise<User> {
+    if (!Capacitor.isNativePlatform()) {
+      throw new Error('Apple Sign-In solo está disponible en dispositivos móviles');
+    }
+    const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
     const result = await FirebaseAuthentication.signInWithApple();
     const credential = new OAuthProvider('apple.com').credential({
       idToken: result.credential?.idToken,
@@ -58,7 +66,10 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
-    await FirebaseAuthentication.signOut();
+    if (Capacitor.isNativePlatform()) {
+      const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+      await FirebaseAuthentication.signOut();
+    }
     await signOut(this.auth);
   }
 

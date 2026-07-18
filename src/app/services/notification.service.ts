@@ -1,10 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import {
-  PushNotifications,
-  PushNotificationSchema,
-  PushNotificationToken,
-  ActionPerformed,
-} from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 
@@ -35,7 +30,14 @@ export class NotificationService {
   }
 
   async initialize(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      console.warn('Push notifications only available on native devices');
+      return;
+    }
+
     try {
+      const { PushNotifications } = await import('@capacitor/push-notifications');
+
       const permission = await PushNotifications.requestPermissions();
       if (permission.receive !== 'granted') {
         console.warn('Push notification permission denied');
@@ -43,15 +45,16 @@ export class NotificationService {
       }
 
       await PushNotifications.register();
-
       this.setupListeners();
     } catch (error) {
       console.error('Error initializing push notifications:', error);
     }
   }
 
-  private setupListeners(): void {
-    PushNotifications.addListener('registration', (token: PushNotificationToken) => {
+  private async setupListeners(): Promise<void> {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+
+    PushNotifications.addListener('registration', (token) => {
       console.log('Push registration success, token:', token.value);
       this.sendTokenToServer(token.value);
     });
@@ -62,7 +65,7 @@ export class NotificationService {
 
     PushNotifications.addListener(
       'pushNotificationReceived',
-      (notification: PushNotificationSchema) => {
+      (notification) => {
         this.ngZone.run(() => {
           this.handleForegroundNotification(notification);
         });
@@ -71,7 +74,7 @@ export class NotificationService {
 
     PushNotifications.addListener(
       'pushNotificationActionPerformed',
-      (action: ActionPerformed) => {
+      (action) => {
         this.ngZone.run(() => {
           this.handleNotificationAction(action);
         });
@@ -79,7 +82,7 @@ export class NotificationService {
     );
   }
 
-  private handleForegroundNotification(notification: PushNotificationSchema): void {
+  private handleForegroundNotification(notification: any): void {
     const appNotification: AppNotification = {
       id: notification.id?.toString() || Date.now().toString(),
       title: notification.title || 'Nueva notificación',
@@ -92,7 +95,7 @@ export class NotificationService {
     this.addNotification(appNotification);
   }
 
-  private handleNotificationAction(action: ActionPerformed): void {
+  private handleNotificationAction(action: any): void {
     const notification = action.notification;
     const signalId = notification.data?.['signalId'];
 
@@ -102,7 +105,6 @@ export class NotificationService {
   }
 
   private async sendTokenToServer(token: string): Promise<void> {
-    // TODO: Send token to your backend/Supabase to store for sending notifications
     console.log('Token to send to server:', token);
   }
 

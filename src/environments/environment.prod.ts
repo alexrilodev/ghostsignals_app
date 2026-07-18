@@ -3,17 +3,17 @@ export const environment = {
 
   // Firebase Configuration (REPLACE with real values before build)
   firebase: {
-    apiKey: 'YOUR_FIREBASE_API_KEY',
-    authDomain: 'YOUR_PROJECT.firebaseapp.com',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT.appspot.com',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    appId: 'YOUR_APP_ID',
+    apiKey: 'AIzaSyC0054KMrr-uPBAnyvbwRHc7alIfw22XR4',
+    authDomain: 'ghostsignals.firebaseapp.com',
+    projectId: 'ghostsignals',
+    storageBucket: 'ghostsignals.firebasestorage.app',
+    messagingSenderId: '572170533212',
+    appId: '1:572170533212:web:16ec858d14063534722999',
   },
 
   // Supabase Configuration (REPLACE with real values before build)
   supabase: {
-    url: 'https://YOUR_PROJECT.supabase.co',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+    url: 'https://odfnzuvwcyngpoagkcjm.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kZm56dXZ3Y3luZ3BvYWdrY2ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzNzY0MjQsImV4cCI6MjA5OTk1MjQyNH0.TY4hZKk9osSIs2hCP6WBLF9_KBYF4tg_B9DJL6ojjH4',
   },
 };
