@@ -13,38 +13,80 @@
 
   <div class="profile-content">
     <div class="avatar-section">
-      <div class="avatar">
-        <ion-icon name="person-outline"></ion-icon>
+      <div class="avatar" (click)="changePhoto()">
+        @if (userPhoto) {
+          <img [src]="userPhoto" alt="Foto de perfil">
+        } @else {
+          <ion-icon name="person-outline"></ion-icon>
+        }
+        <div class="avatar-overlay">
+          <ion-icon name="camera"></ion-icon>
+        </div>
       </div>
-      <h2>Usuario</h2>
-      <p>usuario@email.com</p>
+      <h2>{{ userName || 'Sin nombre' }}</h2>
+      <p>{{ userEmail }}</p>
     </div>
 
-    <ion-list>
-      <ion-list-header>
-        <ion-label>Tags de interés</ion-label>
-      </ion-list-header>
-      <ion-item>
-        <ion-label>Arte</ion-label>
-        <ion-toggle slot="end"></ion-toggle>
-      </ion-item>
-      <ion-item>
-        <ion-label>Música</ion-label>
-        <ion-toggle slot="end"></ion-toggle>
-      </ion-item>
-      <ion-item>
-        <ion-label>Comida</ion-label>
-        <ion-toggle slot="end"></ion-toggle>
-      </ion-item>
-      <ion-item>
-        <ion-label>Deporte</ion-label>
-        <ion-toggle slot="end"></ion-toggle>
-      </ion-item>
-      <ion-item>
-        <ion-label>Cultura</ion-label>
-        <ion-toggle slot="end"></ion-toggle>
-      </ion-item>
-    </ion-list>
+    <div class="section">
+      <h3>Cambiar contraseña</h3>
+      @if (showPasswordForm) {
+        <div class="password-form">
+          <ion-item>
+            <ion-label position="floating">Contraseña actual</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="currentPassword"
+              autocomplete="current-password"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Nueva contraseña</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="newPassword"
+              autocomplete="new-password"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-label position="floating">Confirmar nueva contraseña</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="confirmPassword"
+              autocomplete="new-password"
+            ></ion-input>
+          </ion-item>
+          <div class="password-actions">
+            <ion-button fill="clear" (click)="togglePasswordForm()">Cancelar</ion-button>
+            <ion-button (click)="changePassword()" [disabled]="loadingPassword">
+              @if (loadingPassword) {
+                <ion-spinner name="crescent" slot="start"></ion-spinner>
+              }
+              Guardar
+            </ion-button>
+          </div>
+        </div>
+      } @else {
+        <ion-button fill="outline" expand="block" (click)="togglePasswordForm()">
+          Cambiar contraseña
+        </ion-button>
+      }
+    </div>
+
+    <div class="section">
+      <h3>Tags de interés</h3>
+      <p class="section-description">Selecciona los tags que te interesan. Se aplicarán automáticamente en Explorar.</p>
+      <div class="tags-container">
+        @for (tag of availableTags; track tag) {
+          <ion-chip
+            [outline]="!isPreferredTag(tag)"
+            (click)="togglePreferredTag(tag)"
+            [class.selected]="isPreferredTag(tag)"
+          >
+            {{ tag }}
+          </ion-chip>
+        }
+      </div>
+    </div>
 
     <div class="logout-section">
       <ion-button expand="block" color="danger" (click)="logout()">

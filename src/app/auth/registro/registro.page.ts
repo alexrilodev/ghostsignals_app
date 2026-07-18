@@ -37,6 +37,7 @@ import { AuthService } from '../../services/auth.service';
   ],
 })
 export class RegistroPage {
+  name = '';
   email = '';
   password = '';
   confirmPassword = '';
@@ -51,7 +52,7 @@ export class RegistroPage {
   ) {}
 
   async register() {
-    if (!this.email || !this.password || !this.confirmPassword) {
+    if (!this.name.trim() || !this.email || !this.password || !this.confirmPassword) {
       this.error = 'Por favor completa todos los campos';
       return;
     }
@@ -71,6 +72,7 @@ export class RegistroPage {
 
     try {
       await this.authService.register(this.email, this.password);
+      await this.authService.updateProfile(this.name.trim());
       this.router.navigateByUrl('/tabs/mapa', { replaceUrl: true });
     } catch (e: any) {
       this.error = this.getErrorMessage(e.code);

@@ -126,15 +126,27 @@
   overflow: hidden;
 }
 
-.signal-tags {
+.signal-footer {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  justify-content: space-between;
+  align-items: center;
 
-  .signal-tag {
-    --background: rgba(var(--ion-color-primary-rgb), 0.1);
-    height: 24px;
+  .signal-author {
     font-size: 12px;
-    margin: 0;
+    color: var(--ion-color-medium);
+    font-style: italic;
+  }
+
+  .signal-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    .signal-tag {
+      --background: rgba(var(--ion-color-primary-rgb), 0.1);
+      height: 24px;
+      font-size: 12px;
+      margin: 0;
+    }
   }
 }

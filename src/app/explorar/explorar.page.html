@@ -67,10 +67,13 @@
               @if (signal.description) {
                 <p class="signal-description">{{ signal.description }}</p>
               }
-              <div class="signal-tags">
-                @for (tag of signal.tags; track tag) {
-                  <ion-chip class="signal-tag" [outline]="true">{{ tag }}</ion-chip>
-                }
+              <div class="signal-footer">
+                <span class="signal-author">{{ signal.user_name }}</span>
+                <div class="signal-tags">
+                  @for (tag of signal.tags; track tag) {
+                    <ion-chip class="signal-tag" [outline]="true">{{ tag }}</ion-chip>
+                  }
+                </div>
               </div>
             </div>
           }

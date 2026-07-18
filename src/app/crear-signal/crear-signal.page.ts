@@ -173,6 +173,7 @@ export class CrearSignalPage implements OnInit {
 
       const signal = await this.supabaseService.createSignal({
         user_id: user.uid,
+        user_name: user.displayName || user.email || 'Anónimo',
         title: this.title,
         description: this.description,
         image_url: '',

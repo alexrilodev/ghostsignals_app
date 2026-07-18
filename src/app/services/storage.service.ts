@@ -63,4 +63,41 @@ export class StorageService {
       console.error('Error deleting image:', error);
     }
   }
+
+  async uploadProfilePhoto(
+    base64String: string,
+    format: string
+  ): Promise<string> {
+    const user = this.authService.currentUser;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const fileName = `${user.uid}.${format}`;
+    const contentType = `image/${format}`;
+
+    const byteCharacters = atob(base64String);
+    const byteArray = new Uint8Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteArray[i] = byteCharacters.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: contentType });
+
+    await this.supabase.storage.from('profiles').remove([`${user.uid}.jpeg`, `${user.uid}.png`, `${user.uid}.webp`, `${user.uid}.gif`]).catch(() => {});
+
+    const { error } = await this.supabase.storage
+      .from('profiles')
+      .upload(fileName, blob, { contentType });
+
+    if (error) {
+      console.error('Error uploading profile photo:', error);
+      throw error;
+    }
+
+    const { data } = this.supabase.storage
+      .from('profiles')
+      .getPublicUrl(fileName);
+
+    return data.publicUrl + '?t=' + Date.now();
+  }
 }

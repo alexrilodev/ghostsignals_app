@@ -16,6 +16,8 @@ import {
 } from '@ionic/angular/standalone';
 import { SupabaseService, Signal } from '../services/supabase.service';
 
+const PREFERRED_TAGS_KEY = 'ghostsignals_preferred_tags';
+
 @Component({
   selector: 'app-explorar',
   templateUrl: 'explorar.page.html',
@@ -58,7 +60,37 @@ export class ExplorarPage implements OnInit {
   constructor(private supabaseService: SupabaseService, private router: Router) {}
 
   ngOnInit() {
+    this.loadPreferredTags();
     this.loadSignals();
+  }
+
+  ionViewDidEnter() {
+    const stored = localStorage.getItem(PREFERRED_TAGS_KEY);
+    let newTags: string[] = [];
+    if (stored) {
+      try {
+        newTags = JSON.parse(stored);
+      } catch {
+        newTags = [];
+      }
+    }
+
+    const changed = JSON.stringify(newTags) !== JSON.stringify(this.selectedTags);
+    if (changed) {
+      this.selectedTags = newTags;
+      this.loadSignals();
+    }
+  }
+
+  loadPreferredTags() {
+    const stored = localStorage.getItem(PREFERRED_TAGS_KEY);
+    if (stored) {
+      try {
+        this.selectedTags = JSON.parse(stored);
+      } catch {
+        this.selectedTags = [];
+      }
+    }
   }
 
   async loadSignals() {

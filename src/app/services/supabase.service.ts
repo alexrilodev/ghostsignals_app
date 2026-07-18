@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 export interface Signal {
   id: string;
   user_id: string;
+  user_name: string;
   title: string;
   description: string;
   image_url: string;

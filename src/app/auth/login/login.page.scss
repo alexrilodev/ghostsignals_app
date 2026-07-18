@@ -10,6 +10,11 @@
   text-align: center;
   margin-bottom: 32px;
 
+  .ghost-icon {
+    color: var(--ion-color-primary);
+    margin-bottom: 12px;
+  }
+
   h1 {
     margin: 0 0 8px 0;
     font-size: 28px;
@@ -40,11 +45,11 @@
 }
 
 .apple-button {
-  --border-color: #000;
-  --color: #000;
+  --border-color: #fff;
+  --color: #fff;
 
   &:hover {
-    --background: rgba(0, 0, 0, 0.1);
+    --background: rgba(255, 255, 255, 0.1);
   }
 }
 

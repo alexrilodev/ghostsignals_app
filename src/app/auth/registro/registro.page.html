@@ -45,6 +45,17 @@
 
     <form (ngSubmit)="register()" class="auth-form">
       <ion-item>
+        <ion-label position="floating">Nombre</ion-label>
+        <ion-input
+          type="text"
+          [(ngModel)]="name"
+          name="name"
+          required
+          autocomplete="name"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item>
         <ion-label position="floating">Email</ion-label>
         <ion-input
           type="email"

@@ -7,6 +7,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  updateProfile as firebaseUpdateProfile,
+  updatePassword as firebaseUpdatePassword,
   GoogleAuthProvider,
   OAuthProvider,
   signInWithCredential,
@@ -65,6 +67,24 @@ export class AuthService {
     });
     const userCredential = await signInWithCredential(this.auth, credential);
     return userCredential.user;
+  }
+
+  async updateProfile(displayName: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+    await firebaseUpdateProfile(user, { displayName });
+  }
+
+  async updatePhotoURL(photoURL: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+    await firebaseUpdateProfile(user, { photoURL });
+  }
+
+  async updatePassword(newPassword: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+    await firebaseUpdatePassword(user, newPassword);
   }
 
   async logout(): Promise<void> {
