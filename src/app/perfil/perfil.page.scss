@@ -194,3 +194,23 @@
 .logout-section {
   margin-top: 32px;
 }
+
+.danger-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ion-color-danger);
+  margin-bottom: 32px;
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ion-color-danger);
+  }
+
+  .section-description {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    color: var(--ion-color-medium);
+  }
+}

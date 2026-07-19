@@ -129,5 +129,19 @@
         Cerrar Sesión
       </ion-button>
     </div>
+
+    <div class="danger-section">
+      <h3>Gestionar Datos</h3>
+      <p class="section-description">Eliminar tu cuenta borrará permanentemente todos tus datos: señales, fotos y perfil. Esta acción no se puede deshacer.</p>
+      <ion-button expand="block" fill="outline" color="danger" (click)="confirmDeleteAccount()" [disabled]="deletingAccount">
+        @if (deletingAccount) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          Eliminando cuenta...
+        } @else {
+          <ion-icon name="warning" slot="start"></ion-icon>
+          Eliminar mi cuenta
+        }
+      </ion-button>
+    </div>
   </div>
 </ion-content>

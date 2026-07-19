@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail,
   updateProfile as firebaseUpdateProfile,
   updatePassword as firebaseUpdatePassword,
+  deleteUser,
   GoogleAuthProvider,
   OAuthProvider,
   signInWithCredential,
@@ -93,6 +94,12 @@ export class AuthService {
       await FirebaseAuthentication.signOut();
     }
     await signOut(this.auth);
+  }
+
+  async deleteAccount(): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('User not authenticated');
+    await deleteUser(user);
   }
 
   async resetPassword(email: string): Promise<void> {

@@ -56,6 +56,7 @@ export class PerfilPage implements OnInit {
 
   loadingPhoto = false;
   loadingPassword = false;
+  deletingAccount = false;
 
   mySignals: Signal[] = [];
   mySignalsCount = 0;
@@ -273,5 +274,57 @@ export class PerfilPage implements OnInit {
       position: 'bottom',
     });
     await toast.present();
+  }
+
+  async confirmDeleteAccount() {
+    const alert = await this.alertController.create({
+      header: 'Eliminar Cuenta',
+      subHeader: 'Esta acción es irreversible',
+      message:
+        'Se eliminarán permanentemente todas tus señales, fotos de perfil, imágenes de señales y tu cuenta de usuario. ¿Estás completamente seguro?',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar mi cuenta',
+          role: 'destructive',
+          handler: () => this.deleteAccount(),
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async deleteAccount() {
+    this.deletingAccount = true;
+    try {
+      const signals = await this.supabaseService.getUserSignals();
+
+      for (const signal of signals) {
+        if (signal.image_url) {
+          await this.storageService.deleteSignalImage(signal.image_url);
+        }
+      }
+
+      await this.supabaseService.deleteUserSignals();
+      await this.storageService.deleteProfilePhoto();
+
+      const uid = this.authService.uid;
+      if (uid) {
+        localStorage.removeItem(PREFERRED_TAGS_PREFIX + uid);
+      }
+
+      await this.authService.deleteAccount();
+      await this.authService.logout();
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      if (error?.code === 'auth/requires-recent-login') {
+        this.showToast('Debes haber iniciado sesión recientemente. Cierra sesión y vuelve a iniciar para eliminar tu cuenta.');
+      } else {
+        this.showToast('Error al eliminar la cuenta');
+      }
+    } finally {
+      this.deletingAccount = false;
+    }
   }
 }

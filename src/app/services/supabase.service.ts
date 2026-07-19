@@ -176,4 +176,21 @@ export class SupabaseService {
 
     return data || [];
   }
+
+  async deleteUserSignals(): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const { error } = await this.supabase
+      .from('signals')
+      .delete()
+      .eq('user_id', user.uid);
+
+    if (error) {
+      console.error('Error deleting user signals:', error);
+      throw error;
+    }
+  }
 }

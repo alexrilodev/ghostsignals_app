@@ -100,4 +100,35 @@ export class StorageService {
 
     return data.publicUrl + '?t=' + Date.now();
   }
+
+  async deleteAllUserSignalImages(): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) return;
+
+    try {
+      const { data: files } = await this.supabase.storage
+        .from('signals')
+        .list(`signals/${user.uid}`);
+
+      if (files && files.length > 0) {
+        const paths = files.map(f => `signals/${user.uid}/${f.name}`);
+        await this.supabase.storage.from('signals').remove(paths);
+      }
+    } catch (error) {
+      console.error('Error deleting user signal images:', error);
+    }
+  }
+
+  async deleteProfilePhoto(): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) return;
+
+    try {
+      await this.supabase.storage
+        .from('profiles')
+        .remove([`${user.uid}.jpeg`, `${user.uid}.png`, `${user.uid}.webp`, `${user.uid}.gif`]);
+    } catch (error) {
+      console.error('Error deleting profile photo:', error);
+    }
+  }
 }
