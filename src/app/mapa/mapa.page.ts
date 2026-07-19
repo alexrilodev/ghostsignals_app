@@ -193,4 +193,36 @@ export class MapaPage implements OnInit, OnDestroy {
     await Browser.open({ url: 'app-settings:' });
   }
 
+  async recenterOnUser() {
+    if (this.latitude === null || this.longitude === null) return;
+
+    try {
+      let lat: number;
+      let lng: number;
+
+      if (Capacitor.isNativePlatform()) {
+        const permission = await Geolocation.requestPermissions();
+        if (permission.location !== 'granted') return;
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      } else {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        });
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      }
+
+      this.latitude = lat;
+      this.longitude = lng;
+      this.mapService.centerOnUser(lat, lng);
+    } catch (error) {
+      console.error('Error recentering:', error);
+    }
+  }
 }

@@ -15,6 +15,8 @@ import {
   AlertController,
   ToastController,
 } from '@ionic/angular/standalone';
+import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
 import { SupabaseService, Signal } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
 
@@ -40,6 +42,7 @@ export class SignalDetailPage implements OnInit {
   signal: Signal | null = null;
   loading = true;
   isOwner = false;
+  distance: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -67,12 +70,63 @@ export class SignalDetailPage implements OnInit {
       if (this.signal) {
         const user = this.authService.currentUser;
         this.isOwner = user ? this.signal.user_id === user.uid : false;
+        await this.calculateDistance();
       }
     } catch (error) {
       console.error('Error loading signal:', error);
     } finally {
       this.loading = false;
     }
+  }
+
+  private async calculateDistance() {
+    if (!this.signal) return;
+
+    try {
+      let userLat: number;
+      let userLng: number;
+
+      if (Capacitor.isNativePlatform()) {
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+      } else {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        });
+        userLat = position.coords.latitude;
+        userLng = position.coords.longitude;
+      }
+
+      const dist = this.haversineDistance(userLat, userLng, this.signal.latitude, this.signal.longitude);
+      this.distance = dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`;
+    } catch {
+      this.distance = null;
+    }
+  }
+
+  private haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  openMaps() {
+    if (!this.signal) return;
+    const url = `https://www.google.com/maps?q=${this.signal.latitude},${this.signal.longitude}`;
+    window.open(url, '_blank');
   }
 
   editSignal() {

@@ -51,9 +51,16 @@
         </div>
 
         <div class="signal-meta">
-          <div class="meta-item">
+          @if (distance) {
+            <div class="meta-item distance-item">
+              <ion-icon name="navigate-outline"></ion-icon>
+              <span>{{ distance }}</span>
+            </div>
+          }
+          <div class="meta-item coordinates-item" (click)="openMaps()">
             <ion-icon name="location-outline"></ion-icon>
             <span>{{ signal.latitude.toFixed(4) }}, {{ signal.longitude.toFixed(4) }}</span>
+            <ion-icon name="open-outline" class="external-link-icon"></ion-icon>
           </div>
           <div class="meta-item">
             <ion-icon name="time-outline"></ion-icon>

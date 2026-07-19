@@ -16,6 +16,9 @@ import {
   addOutline,
   timeOutline,
   warningOutline,
+  locate,
+  navigateOutline,
+  openOutline,
 } from 'ionicons/icons';
 
 @Component({
@@ -43,6 +46,9 @@ export class TabsPage {
       addOutline,
       timeOutline,
       warningOutline,
+      locate,
+      navigateOutline,
+      openOutline,
     });
   }
 }

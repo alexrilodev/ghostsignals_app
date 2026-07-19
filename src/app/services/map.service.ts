@@ -118,6 +118,12 @@ export class MapService implements OnDestroy {
     this.map?.invalidateSize();
   }
 
+  centerOnUser(latitude: number, longitude: number): void {
+    if (!this.map) return;
+    this.map.flyTo([latitude, longitude], this.map.getZoom(), { animate: true, duration: 0.8 });
+    this.setUserMarker(latitude, longitude);
+  }
+
   private destroy() {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
