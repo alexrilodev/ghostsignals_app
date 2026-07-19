@@ -20,6 +20,7 @@ import {
 import { AuthService } from '../services/auth.service';
 import { CameraService } from '../services/camera.service';
 import { StorageService } from '../services/storage.service';
+import { SupabaseService, Signal } from '../services/supabase.service';
 
 const PREFERRED_TAGS_PREFIX = 'ghostsignals_preferred_tags_';
 
@@ -56,6 +57,10 @@ export class PerfilPage implements OnInit {
   loadingPhoto = false;
   loadingPassword = false;
 
+  mySignals: Signal[] = [];
+  mySignalsCount = 0;
+  loadingSignals = true;
+
   availableTags = [
     'Arte',
     'Música',
@@ -75,6 +80,7 @@ export class PerfilPage implements OnInit {
     private authService: AuthService,
     private cameraService: CameraService,
     private storageService: StorageService,
+    private supabaseService: SupabaseService,
     private router: Router,
     private alertController: AlertController,
     private toastController: ToastController
@@ -83,6 +89,11 @@ export class PerfilPage implements OnInit {
   ngOnInit() {
     this.loadUserInfo();
     this.loadPreferredTags();
+    this.loadMySignals();
+  }
+
+  ionViewDidEnter() {
+    this.loadMySignals();
   }
 
   loadUserInfo() {
@@ -126,6 +137,51 @@ export class PerfilPage implements OnInit {
 
   isPreferredTag(tag: string): boolean {
     return this.preferredTags.includes(tag);
+  }
+
+  async loadMySignals() {
+    this.loadingSignals = true;
+    try {
+      this.mySignals = await this.supabaseService.getUserSignals();
+      this.mySignalsCount = this.mySignals.length;
+    } catch (error) {
+      console.error('Error loading signals:', error);
+    } finally {
+      this.loadingSignals = false;
+    }
+  }
+
+  editSignal(signalId: string) {
+    this.router.navigate(['/tabs/editar-signal', signalId]);
+  }
+
+  async confirmDeleteSignal(signal: Signal) {
+    const alert = await this.alertController.create({
+      header: 'Eliminar Señal',
+      message: `¿Estás seguro de que quieres eliminar "${signal.title}"?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: async () => {
+            await this.deleteSignal(signal.id);
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async deleteSignal(signalId: string) {
+    try {
+      await this.supabaseService.deleteSignal(signalId);
+      this.showToast('Señal eliminada');
+      await this.loadMySignals();
+    } catch (error) {
+      console.error('Error deleting signal:', error);
+      this.showToast('Error al eliminar la señal');
+    }
   }
 
   async changePhoto() {

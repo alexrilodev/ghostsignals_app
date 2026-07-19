@@ -1,4 +1,11 @@
-.crear-signal-container {
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.editar-signal-container {
   padding: 16px;
 }
 
@@ -72,10 +79,6 @@
       --color: white;
     }
   }
-}
-
-.location-section {
-  margin-top: 8px;
 }
 
 ion-item {

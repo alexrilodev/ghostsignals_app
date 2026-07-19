@@ -11,8 +11,12 @@ import {
   IonChip,
   IonSpinner,
   IonIcon,
+  IonButton,
+  AlertController,
+  ToastController,
 } from '@ionic/angular/standalone';
 import { SupabaseService, Signal } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-signal-detail',
@@ -29,16 +33,21 @@ import { SupabaseService, Signal } from '../services/supabase.service';
     IonChip,
     IonSpinner,
     IonIcon,
+    IonButton,
   ],
 })
 export class SignalDetailPage implements OnInit {
   signal: Signal | null = null;
   loading = true;
+  isOwner = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private supabaseService: SupabaseService
+    private supabaseService: SupabaseService,
+    private authService: AuthService,
+    private alertController: AlertController,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
@@ -54,10 +63,54 @@ export class SignalDetailPage implements OnInit {
     try {
       const signals = await this.supabaseService.getSignalsByTags([], 0, 1000);
       this.signal = signals.find(s => s.id === id) || null;
+
+      if (this.signal) {
+        const user = this.authService.currentUser;
+        this.isOwner = user ? this.signal.user_id === user.uid : false;
+      }
     } catch (error) {
       console.error('Error loading signal:', error);
     } finally {
       this.loading = false;
+    }
+  }
+
+  editSignal() {
+    if (this.signal) {
+      this.router.navigate(['/tabs/editar-signal', this.signal.id]);
+    }
+  }
+
+  async confirmDeleteSignal() {
+    if (!this.signal) return;
+
+    const alert = await this.alertController.create({
+      header: 'Eliminar Señal',
+      message: `¿Estás seguro de que quieres eliminar "${this.signal.title}"?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: async () => {
+            await this.deleteSignal();
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async deleteSignal() {
+    if (!this.signal) return;
+
+    try {
+      await this.supabaseService.deleteSignal(this.signal.id);
+      this.showToast('Señal eliminada');
+      this.router.navigateByUrl('/tabs/perfil');
+    } catch (error) {
+      console.error('Error deleting signal:', error);
+      this.showToast('Error al eliminar la señal');
     }
   }
 
@@ -84,5 +137,14 @@ export class SignalDetailPage implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  async showToast(message: string) {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2000,
+      position: 'bottom',
+    });
+    await toast.present();
   }
 }

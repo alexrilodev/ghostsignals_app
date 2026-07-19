@@ -124,6 +124,27 @@ export class SupabaseService {
     }
   }
 
+  async updateSignal(
+    signalId: string,
+    updates: Partial<Pick<Signal, 'title' | 'description' | 'tags' | 'image_url'>>
+  ): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    const { error } = await this.supabase
+      .from('signals')
+      .update(updates)
+      .eq('id', signalId)
+      .eq('user_id', user.uid);
+
+    if (error) {
+      console.error('Error updating signal:', error);
+      throw error;
+    }
+  }
+
   async updateSignalImage(signalId: string, imageUrl: string): Promise<void> {
     const { error } = await this.supabase
       .from('signals')

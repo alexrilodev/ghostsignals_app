@@ -78,11 +78,8 @@ export class ExplorarPage implements OnInit {
       }
     }
 
-    const changed = JSON.stringify(newTags) !== JSON.stringify(this.selectedTags);
-    if (changed) {
-      this.selectedTags = newTags;
-      this.loadSignals();
-    }
+    this.selectedTags = newTags;
+    this.loadSignals();
   }
 
   loadPreferredTags() {

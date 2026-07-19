@@ -1,0 +1,99 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/perfil"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Editar Señal</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @if (loading) {
+    <div class="loading-container">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else {
+    <div class="editar-signal-container">
+      <form (ngSubmit)="saveSignal()" class="signal-form">
+        <div class="photo-section">
+          @if (capturedImage) {
+            <div class="photo-preview">
+              <img [src]="'data:image/' + capturedImage.format + ';base64,' + capturedImage.base64String" alt="Foto capturada">
+              <ion-button fill="clear" (click)="capturedImage = null" class="remove-photo">
+                <ion-icon name="close-circle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+          } @else if (existingImageUrl) {
+            <div class="photo-preview">
+              <img [src]="existingImageUrl" alt="Foto actual">
+              <ion-button fill="clear" (click)="removeExistingImage()" class="remove-photo">
+                <ion-icon name="close-circle" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+          } @else {
+            <div class="photo-buttons">
+              <ion-button expand="block" (click)="takePhoto()" fill="outline">
+                <ion-icon name="camera" slot="start"></ion-icon>
+                Tomar Foto
+              </ion-button>
+              <ion-button expand="block" (click)="selectFromGallery()" fill="outline">
+                <ion-icon name="images" slot="start"></ion-icon>
+                Galería
+              </ion-button>
+            </div>
+          }
+        </div>
+
+        <ion-item>
+          <ion-label position="floating">Título *</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="title"
+            name="title"
+            required
+            maxlength="50"
+          ></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Descripción</ion-label>
+          <ion-textarea
+            [(ngModel)]="description"
+            name="description"
+            rows="3"
+            maxlength="200"
+          ></ion-textarea>
+        </ion-item>
+
+        <div class="tags-section">
+          <ion-label class="tags-label">Tags *</ion-label>
+          <div class="tags-container">
+            @for (tag of availableTags; track tag) {
+              <ion-chip
+                [outline]="!isTagSelected(tag)"
+                (click)="toggleTag(tag)"
+                [class.selected]="isTagSelected(tag)"
+              >
+                {{ tag }}
+              </ion-chip>
+            }
+          </div>
+        </div>
+
+        <ion-button
+          type="submit"
+          expand="block"
+          [disabled]="saving"
+          class="submit-button"
+        >
+          @if (saving) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+            Guardar Cambios
+          }
+        </ion-button>
+      </form>
+    </div>
+  }
+</ion-content>

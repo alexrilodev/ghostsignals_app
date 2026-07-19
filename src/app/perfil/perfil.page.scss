@@ -83,6 +83,85 @@
   }
 }
 
+.signals-loading {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.signals-count {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: var(--ion-color-medium);
+}
+
+.empty-signals {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  font-style: italic;
+}
+
+.signals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signal-card {
+  display: flex;
+  align-items: center;
+  background: var(--ion-color-light);
+  border-radius: 12px;
+  padding: 12px;
+  gap: 8px;
+
+  .signal-info {
+    flex: 1;
+    cursor: pointer;
+    min-width: 0;
+
+    h4 {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .signal-date {
+      margin: 0 0 6px 0;
+      font-size: 12px;
+      color: var(--ion-color-medium);
+    }
+
+    .signal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .signal-tag {
+        --background: rgba(var(--ion-color-primary-rgb), 0.1);
+        height: 22px;
+        font-size: 11px;
+      }
+    }
+  }
+
+  .signal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    ion-button {
+      --padding-start: 4px;
+      --padding-end: 4px;
+      margin: 0;
+    }
+  }
+}
+
 .password-form {
   ion-item {
     margin-bottom: 8px;

@@ -32,6 +32,11 @@ export const routes: Routes = [
           import('../crear-signal/crear-signal.page').then((m) => m.CrearSignalPage),
       },
       {
+        path: 'editar-signal/:id',
+        loadComponent: () =>
+          import('../editar-signal/editar-signal.page').then((m) => m.EditarSignalPage),
+      },
+      {
         path: 'signal-detail/:id',
         loadComponent: () =>
           import('../signal-detail/signal-detail.page').then((m) => m.SignalDetailPage),

@@ -4,6 +4,16 @@
       <ion-back-button defaultHref="/tabs/explorar"></ion-back-button>
     </ion-buttons>
     <ion-title>Detalle de Señal</ion-title>
+    @if (isOwner) {
+      <ion-buttons slot="end">
+        <ion-button (click)="editSignal()">
+          <ion-icon name="create-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+        <ion-button (click)="confirmDeleteSignal()" color="danger">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
   </ion-toolbar>
 </ion-header>
 
