@@ -223,4 +223,34 @@ export class EditarSignalPage implements OnInit {
     });
     await toast.present();
   }
+
+  async confirmDelete() {
+    const alert = await this.alertController.create({
+      header: 'Eliminar Señal',
+      message: '¿Estás seguro de que quieres eliminar esta señal? Esta acción no se puede deshacer.',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: () => this.deleteSignal(),
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async deleteSignal() {
+    this.saving = true;
+    try {
+      await this.supabaseService.deleteSignal(this.signalId);
+      this.showToast('Señal eliminada');
+      await this.router.navigate(['/tabs/perfil']);
+    } catch (error) {
+      console.error('Error deleting signal:', error);
+      this.showToast('Error al eliminar la señal');
+    } finally {
+      this.saving = false;
+    }
+  }
 }

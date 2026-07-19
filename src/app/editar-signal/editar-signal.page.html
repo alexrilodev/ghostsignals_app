@@ -93,6 +93,18 @@
             Guardar Cambios
           }
         </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="danger"
+          (click)="confirmDelete()"
+          [disabled]="saving"
+          class="delete-button"
+        >
+          <ion-icon name="trash" slot="start"></ion-icon>
+          Eliminar Señal
+        </ion-button>
       </form>
     </div>
   }
