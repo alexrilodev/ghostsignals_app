@@ -36,6 +36,9 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
 
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
 /* Leaflet Map Styles */
 .leaflet-container {
   width: 100%;
