@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
@@ -47,7 +47,8 @@ export class MapaPage implements OnInit, OnDestroy {
   constructor(
     private mapService: MapService,
     private supabaseService: SupabaseService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -112,6 +113,16 @@ export class MapaPage implements OnInit, OnDestroy {
     this.mapService.setUserMarker(this.latitude!, this.longitude!);
     this.mapInitialized = true;
 
+    mapEl.addEventListener('click', (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('popup-link')) {
+        const signalId = target.getAttribute('data-signal-id');
+        if (signalId) {
+          this.router.navigate(['/tabs/signal-detail', signalId]);
+        }
+      }
+    });
+
     this.mapService.onMapMove(() => {
       this.ngZone.run(() => {
         this.loadNearbySignals();
@@ -173,6 +184,7 @@ export class MapaPage implements OnInit, OnDestroy {
         <p class="popup-distance">${distanceText}</p>
         <p class="popup-description">${signal.description || ''}</p>
         <div class="popup-tags">${tagsHtml}</div>
+        <a class="popup-link" data-signal-id="${signal.id}">Ver detalle</a>
       </div>
     `;
   }
