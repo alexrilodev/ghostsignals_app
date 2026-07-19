@@ -63,15 +63,18 @@ export class CameraService {
     }
   }
 
-  private takePhotoWeb(mode: 'camera' | 'gallery'): Promise<CapturedImage | null> {
+  private async takePhotoWeb(mode: 'camera' | 'gallery'): Promise<CapturedImage | null> {
+    if (mode === 'camera') {
+      return this.takePhotoWebCamera();
+    }
+    return this.takePhotoWebGallery();
+  }
+
+  private takePhotoWebGallery(): Promise<CapturedImage | null> {
     return new Promise((resolve) => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
-
-      if (mode === 'camera') {
-        input.capture = 'environment';
-      }
 
       input.onchange = async () => {
         const file = input.files?.[0];
@@ -98,5 +101,120 @@ export class CameraService {
       input.oncancel = () => resolve(null);
       input.click();
     });
+  }
+
+  private async takePhotoWebCamera(): Promise<CapturedImage | null> {
+    let stream: MediaStream | null = null;
+    let overlayEl: HTMLDivElement | null = null;
+
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1024 }, height: { ideal: 1024 } },
+      });
+
+      const result = await new Promise<CapturedImage | null>((resolve) => {
+        overlayEl = document.createElement('div');
+        overlayEl.innerHTML = `
+          <style>
+            .camera-preview-overlay {
+              position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+              z-index: 99999; background: #000;
+              display: flex; flex-direction: column; align-items: center; justify-content: center;
+            }
+            .camera-preview-overlay video {
+              width: 100%; height: 100%; object-fit: cover;
+            }
+            .camera-preview-overlay .camera-controls {
+              position: absolute; bottom: 0; left: 0; right: 0;
+              display: flex; justify-content: center; align-items: center; gap: 24px;
+              padding: 24px 16px 40px;
+              background: linear-gradient(transparent, rgba(0,0,0,0.6));
+            }
+            .camera-preview-overlay .btn-capture {
+              width: 68px; height: 68px; border-radius: 50%;
+              border: 4px solid #fff; background: rgba(255,255,255,0.3);
+              cursor: pointer; position: relative;
+              transition: background 0.15s;
+            }
+            .camera-preview-overlay .btn-capture:active { background: rgba(255,255,255,0.7); }
+            .camera-preview-overlay .btn-capture::after {
+              content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px;
+              border-radius: 50%; background: #fff;
+            }
+            .camera-preview-overlay .btn-cancel {
+              width: 44px; height: 44px; border-radius: 50%;
+              border: none; background: rgba(255,255,255,0.25);
+              color: #fff; font-size: 22px; cursor: pointer;
+              display: flex; align-items: center; justify-content: center;
+            }
+          </style>
+          <div class="camera-preview-overlay">
+            <video playsinline autoplay></video>
+            <div class="camera-controls">
+              <button class="btn-cancel" aria-label="Cancelar">✕</button>
+              <button class="btn-capture" aria-label="Capturar"></button>
+            </div>
+          </div>
+        `;
+
+        const videoEl = overlayEl!.querySelector('video') as HTMLVideoElement;
+        const btnCapture = overlayEl!.querySelector('.btn-capture') as HTMLButtonElement;
+        const btnCancel = overlayEl!.querySelector('.btn-cancel') as HTMLButtonElement;
+
+        videoEl.srcObject = stream!;
+        videoEl.play();
+
+        const cleanup = () => {
+          if (overlayEl && overlayEl.parentNode) {
+            overlayEl.parentNode.removeChild(overlayEl);
+          }
+          if (stream) {
+            stream.getTracks().forEach((t) => t.stop());
+          }
+        };
+
+        const capture = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = videoEl.videoWidth;
+          canvas.height = videoEl.videoHeight;
+          const ctx = canvas.getContext('2d')!;
+          ctx.drawImage(videoEl, 0, 0);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+          const base64 = dataUrl.split(',')[1];
+
+          cleanup();
+
+          resolve({
+            base64String: base64,
+            webPath: dataUrl,
+            format: 'jpeg',
+          });
+        };
+
+        btnCapture.addEventListener('click', capture);
+        btnCancel.addEventListener('click', () => {
+          cleanup();
+          resolve(null);
+        });
+
+        document.body.appendChild(overlayEl);
+      });
+
+      return result;
+    } catch (error: any) {
+      const el = document.querySelector('.camera-preview-overlay')?.parentElement;
+      if (el) {
+        el.removeChild(el);
+      }
+      if (error.name === 'NotAllowedError' || error.name === 'NotFoundError') {
+        return null;
+      }
+      throw error;
+    } finally {
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+      }
+    }
   }
 }
