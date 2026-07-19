@@ -21,7 +21,7 @@ import { AuthService } from '../services/auth.service';
 import { CameraService } from '../services/camera.service';
 import { StorageService } from '../services/storage.service';
 
-const PREFERRED_TAGS_KEY = 'ghostsignals_preferred_tags';
+const PREFERRED_TAGS_PREFIX = 'ghostsignals_preferred_tags_';
 
 @Component({
   selector: 'app-perfil',
@@ -95,7 +95,9 @@ export class PerfilPage implements OnInit {
   }
 
   loadPreferredTags() {
-    const stored = localStorage.getItem(PREFERRED_TAGS_KEY);
+    const uid = this.authService.uid;
+    if (!uid) return;
+    const stored = localStorage.getItem(PREFERRED_TAGS_PREFIX + uid);
     if (stored) {
       try {
         this.preferredTags = JSON.parse(stored);
@@ -106,7 +108,9 @@ export class PerfilPage implements OnInit {
   }
 
   savePreferredTags() {
-    localStorage.setItem(PREFERRED_TAGS_KEY, JSON.stringify(this.preferredTags));
+    const uid = this.authService.uid;
+    if (!uid) return;
+    localStorage.setItem(PREFERRED_TAGS_PREFIX + uid, JSON.stringify(this.preferredTags));
     this.showToast('Tags de interés guardados');
   }
 

@@ -15,8 +15,9 @@ import {
   IonIcon,
 } from '@ionic/angular/standalone';
 import { SupabaseService, Signal } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
 
-const PREFERRED_TAGS_KEY = 'ghostsignals_preferred_tags';
+const PREFERRED_TAGS_PREFIX = 'ghostsignals_preferred_tags_';
 
 @Component({
   selector: 'app-explorar',
@@ -57,7 +58,7 @@ export class ExplorarPage implements OnInit {
     'Servicios',
   ];
 
-  constructor(private supabaseService: SupabaseService, private router: Router) {}
+  constructor(private supabaseService: SupabaseService, private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
     this.loadPreferredTags();
@@ -65,7 +66,9 @@ export class ExplorarPage implements OnInit {
   }
 
   ionViewDidEnter() {
-    const stored = localStorage.getItem(PREFERRED_TAGS_KEY);
+    const uid = this.authService.uid;
+    if (!uid) return;
+    const stored = localStorage.getItem(PREFERRED_TAGS_PREFIX + uid);
     let newTags: string[] = [];
     if (stored) {
       try {
@@ -83,7 +86,9 @@ export class ExplorarPage implements OnInit {
   }
 
   loadPreferredTags() {
-    const stored = localStorage.getItem(PREFERRED_TAGS_KEY);
+    const uid = this.authService.uid;
+    if (!uid) return;
+    const stored = localStorage.getItem(PREFERRED_TAGS_PREFIX + uid);
     if (stored) {
       try {
         this.selectedTags = JSON.parse(stored);
