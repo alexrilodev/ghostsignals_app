@@ -142,7 +142,6 @@ export class MapaPage implements OnInit, OnDestroy {
       );
 
       this.mapService.clearMarkers();
-      this.mapService.setUserMarker(center.latitude, center.longitude);
 
       this.signals.forEach(signal => {
         const popupContent = this.createPopupContent(signal);

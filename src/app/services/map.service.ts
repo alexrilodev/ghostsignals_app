@@ -75,7 +75,6 @@ export class MapService implements OnDestroy {
         .addTo(this.map);
     }
 
-    this.map.setView([latitude, longitude], 15);
   }
 
   addSignalMarker(
