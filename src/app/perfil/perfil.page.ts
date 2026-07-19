@@ -16,6 +16,7 @@ import {
   IonSpinner,
   AlertController,
   ToastController,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../services/auth.service';
 import { CameraService } from '../services/camera.service';
@@ -84,7 +85,8 @@ export class PerfilPage implements OnInit {
     private supabaseService: SupabaseService,
     private router: Router,
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private actionSheetController: ActionSheetController
   ) {}
 
   ngOnInit() {
@@ -186,9 +188,35 @@ export class PerfilPage implements OnInit {
   }
 
   async changePhoto() {
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Cambiar foto de perfil',
+      buttons: [
+        {
+          text: 'Tomar Foto',
+          icon: 'camera',
+          handler: () => this.pickAndUploadPhoto('camera'),
+        },
+        {
+          text: 'Galería',
+          icon: 'images',
+          handler: () => this.pickAndUploadPhoto('gallery'),
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+      ],
+    });
+    await actionSheet.present();
+  }
+
+  private async pickAndUploadPhoto(mode: 'camera' | 'gallery') {
     this.loadingPhoto = true;
     try {
-      const image = await this.cameraService.takePhoto();
+      const image = mode === 'camera'
+        ? await this.cameraService.takePhoto()
+        : await this.cameraService.selectFromGallery();
+
       if (!image) return;
 
       const imageUrl = await this.storageService.uploadProfilePhoto(
