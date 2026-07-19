@@ -88,6 +88,18 @@ export class CrearSignalPage implements OnInit {
     this.getCurrentPosition();
   }
 
+  ionViewDidEnter() {
+    this.resetForm();
+  }
+
+  resetForm() {
+    this.title = '';
+    this.description = '';
+    this.selectedTags = [];
+    this.capturedImage = null;
+    this.loading = false;
+  }
+
   async getCurrentPosition() {
     try {
       if (Capacitor.isNativePlatform()) {

@@ -90,6 +90,14 @@ export class EditarSignalPage implements OnInit {
     }
   }
 
+  ionViewDidEnter() {
+    const newId = this.route.snapshot.paramMap.get('id') || '';
+    if (newId && newId !== this.signalId) {
+      this.signalId = newId;
+      this.loadSignal();
+    }
+  }
+
   async loadSignal() {
     try {
       const signals = await this.supabaseService.getUserSignals();
