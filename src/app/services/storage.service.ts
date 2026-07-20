@@ -54,9 +54,9 @@ export class StorageService {
 
   async deleteSignalImage(imageUrl: string): Promise<void> {
     try {
-      const urlParts = imageUrl.split('/signals/');
-      if (urlParts.length < 2) return;
-      const filePath = 'signals/' + urlParts[1];
+      const pathStart = imageUrl.lastIndexOf('/signals/') + '/signals/'.length;
+      if (pathStart < '/signals/'.length) return;
+      const filePath = imageUrl.substring(pathStart).split('?')[0];
 
       await this.supabase.storage.from('signals').remove([filePath]);
     } catch (error) {

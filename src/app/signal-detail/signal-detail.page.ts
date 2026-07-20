@@ -19,6 +19,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import { SupabaseService, Signal } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
+import { StorageService } from '../services/storage.service';
 
 @Component({
   selector: 'app-signal-detail',
@@ -43,22 +44,33 @@ export class SignalDetailPage implements OnInit {
   loading = true;
   isOwner = false;
   distance: string | null = null;
+  private signalId = '';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private supabaseService: SupabaseService,
     private authService: AuthService,
+    private storageService: StorageService,
     private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadSignal(id);
+    this.signalId = this.route.snapshot.paramMap.get('id') || '';
+    if (this.signalId) {
+      this.loadSignal(this.signalId);
     } else {
       this.loading = false;
+    }
+  }
+
+  ionViewDidEnter() {
+    const newId = this.route.snapshot.paramMap.get('id') || '';
+    if (newId) {
+      this.signalId = newId;
+      this.loading = true;
+      this.loadSignal(newId);
     }
   }
 
@@ -159,6 +171,9 @@ export class SignalDetailPage implements OnInit {
     if (!this.signal) return;
 
     try {
+      if (this.signal.image_url) {
+        await this.storageService.deleteSignalImage(this.signal.image_url);
+      }
       await this.supabaseService.deleteSignal(this.signal.id);
       this.showToast('Señal eliminada');
       this.router.navigateByUrl('/tabs/perfil');
