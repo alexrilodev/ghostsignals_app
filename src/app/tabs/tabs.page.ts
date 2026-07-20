@@ -19,6 +19,9 @@ import {
   locate,
   navigateOutline,
   openOutline,
+  sunnyOutline,
+  moonOutline,
+  phonePortraitOutline,
 } from 'ionicons/icons';
 
 @Component({
@@ -49,6 +52,9 @@ export class TabsPage {
       locate,
       navigateOutline,
       openOutline,
+      sunnyOutline,
+      moonOutline,
+      phonePortraitOutline,
     });
   }
 }

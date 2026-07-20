@@ -33,11 +33,57 @@
  */
 
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+@import "@ionic/angular/css/palettes/dark.class.css";
+/* @import '@ionic/angular/css/palettes/dark.system.css'; */
 
 /* Leaflet CSS */
 @import 'leaflet/dist/leaflet.css';
+
+/* Dark mode overlay fixes */
+ion-action-sheet {
+  --background: var(--ion-background-color, #fff);
+  --color: var(--ion-text-color, #000);
+  --button-background: transparent;
+  --button-color: var(--ion-text-color, #000);
+}
+
+ion-action-sheet .action-sheet-button {
+  color: var(--ion-text-color, #000);
+  --button-color: var(--ion-text-color, #000);
+}
+
+.action-sheet-dark {
+  --background: #1e1e1e;
+  --button-background: transparent;
+  --button-color: #ffffff;
+}
+
+.action-sheet-dark .action-sheet-button {
+  color: #ffffff !important;
+}
+
+.action-sheet-dark .action-sheet-cancel {
+  color: #ffffff;
+}
+
+.action-sheet-dark .action-sheet-group {
+  background: #1e1e1e;
+}
+
+ion-alert {
+  --background: var(--ion-item-background, var(--ion-background-color, #fff));
+  --color: var(--ion-text-color, #000);
+}
+
+ion-modal {
+  --background: var(--ion-background-color, #fff);
+  --color: var(--ion-text-color, #000);
+}
+
+ion-popover {
+  --background: var(--ion-background-color, #fff);
+  --color: var(--ion-text-color, #000);
+}
 
 /* Leaflet Map Styles */
 .leaflet-container {
@@ -55,7 +101,7 @@
     margin: 0 0 4px 0;
     font-size: 16px;
     font-weight: 600;
-    color: #333;
+    color: var(--ion-text-color);
   }
 
   .popup-distance {
@@ -68,7 +114,7 @@
   .popup-description {
     margin: 0 0 8px 0;
     font-size: 14px;
-    color: #666;
+    color: var(--ion-color-medium);
     line-height: 1.4;
   }
 

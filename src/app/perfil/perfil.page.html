@@ -124,6 +124,25 @@
       </div>
     </div>
 
+    <div class="section">
+      <h3>Apariencia</h3>
+      <p class="section-description">Elige entre modo claro, oscuro o seguir la configuración del sistema.</p>
+      <ion-segment [value]="themeMode" (ionChange)="setTheme($event.detail.value!)">
+        <ion-segment-button value="light">
+          <ion-icon name="sunny-outline"></ion-icon>
+          <ion-label>Claro</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="dark">
+          <ion-icon name="moon-outline"></ion-icon>
+          <ion-label>Oscuro</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="system">
+          <ion-icon name="phone-portrait-outline"></ion-icon>
+          <ion-label>Sistema</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
     <div class="logout-section">
       <ion-button expand="block" color="danger" (click)="logout()">
         Cerrar Sesión

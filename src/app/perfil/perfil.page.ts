@@ -14,6 +14,8 @@ import {
   IonIcon,
   IonChip,
   IonSpinner,
+  IonSegment,
+  IonSegmentButton,
   AlertController,
   ToastController,
   ActionSheetController,
@@ -22,6 +24,7 @@ import { AuthService } from '../services/auth.service';
 import { CameraService } from '../services/camera.service';
 import { StorageService } from '../services/storage.service';
 import { SupabaseService, Signal } from '../services/supabase.service';
+import { ThemeService, ThemeMode } from '../services/theme.service';
 
 const PREFERRED_TAGS_PREFIX = 'ghostsignals_preferred_tags_';
 
@@ -43,6 +46,8 @@ const PREFERRED_TAGS_PREFIX = 'ghostsignals_preferred_tags_';
     IonIcon,
     IonChip,
     IonSpinner,
+    IonSegment,
+    IonSegmentButton,
   ],
 })
 export class PerfilPage implements OnInit {
@@ -77,12 +82,14 @@ export class PerfilPage implements OnInit {
   ];
 
   preferredTags: string[] = [];
+  themeMode: ThemeMode = 'system';
 
   constructor(
     private authService: AuthService,
     private cameraService: CameraService,
     private storageService: StorageService,
     private supabaseService: SupabaseService,
+    private themeService: ThemeService,
     private router: Router,
     private alertController: AlertController,
     private toastController: ToastController,
@@ -93,6 +100,7 @@ export class PerfilPage implements OnInit {
     this.loadUserInfo();
     this.loadPreferredTags();
     this.loadMySignals();
+    this.themeMode = this.themeService.currentMode;
   }
 
   ionViewDidEnter() {
@@ -142,6 +150,12 @@ export class PerfilPage implements OnInit {
     return this.preferredTags.includes(tag);
   }
 
+  setTheme(mode: string | number) {
+    const themeMode = String(mode) as ThemeMode;
+    this.themeMode = themeMode;
+    this.themeService.setMode(themeMode);
+  }
+
   async loadMySignals() {
     this.loadingSignals = true;
     try {
@@ -188,8 +202,10 @@ export class PerfilPage implements OnInit {
   }
 
   async changePhoto() {
+    const isDark = document.body.classList.contains('ion-palette-dark');
     const actionSheet = await this.actionSheetController.create({
       header: 'Cambiar foto de perfil',
+      cssClass: isDark ? 'action-sheet-dark' : '',
       buttons: [
         {
           text: 'Tomar Foto',

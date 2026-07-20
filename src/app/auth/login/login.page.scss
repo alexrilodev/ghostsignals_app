@@ -11,8 +11,9 @@
   margin-bottom: 32px;
 
   .ghost-icon {
-    color: white;
+    font-size: 64px;
     margin-bottom: 12px;
+    line-height: 1;
   }
 
   h1 {
@@ -45,11 +46,11 @@
 }
 
 .apple-button {
-  --border-color: #fff;
-  --color: #fff;
+  --border-color: var(--ion-text-color);
+  --color: var(--ion-text-color);
 
   &:hover {
-    --background: rgba(255, 255, 255, 0.1);
+    --background: rgba(var(--ion-color-primary-rgb), 0.1);
   }
 }
 
