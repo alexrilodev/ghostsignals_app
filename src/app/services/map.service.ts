@@ -69,6 +69,9 @@ export class MapService implements OnDestroy {
 
     if (this.userMarker) {
       this.userMarker.setLatLng([latitude, longitude]);
+      if (!this.map.hasLayer(this.userMarker)) {
+        this.userMarker.addTo(this.map);
+      }
     } else {
       this.userMarker = L.marker([latitude, longitude], { icon: this.userIcon })
         .bindPopup('<b>Tu ubicación</b>')
