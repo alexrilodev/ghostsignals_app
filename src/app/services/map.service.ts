@@ -1,5 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as L from 'leaflet';
+import 'leaflet.markercluster';
 
 @Injectable({
   providedIn: 'root',
@@ -9,6 +10,7 @@ export class MapService implements OnDestroy {
   private markers: L.Marker[] = [];
   private userMarker: L.Marker | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private markerClusterGroup: L.MarkerClusterGroup | null = null;
 
   private readonly defaultIcon = L.icon({
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -52,6 +54,14 @@ export class MapService implements OnDestroy {
 
     L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
+    this.markerClusterGroup = L.markerClusterGroup({
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      zoomToBoundsOnClick: true,
+      maxClusterRadius: 30,
+    });
+    this.map.addLayer(this.markerClusterGroup);
+
     let resizeTimeout: any;
     this.resizeObserver = new ResizeObserver(() => {
       clearTimeout(resizeTimeout);
@@ -85,20 +95,22 @@ export class MapService implements OnDestroy {
     longitude: number,
     popupContent: string
   ): L.Marker {
-    if (!this.map) {
+    if (!this.map || !this.markerClusterGroup) {
       throw new Error('Map not initialized');
     }
 
     const marker = L.marker([latitude, longitude], { icon: this.defaultIcon })
-      .bindPopup(popupContent, { maxWidth: 250 })
-      .addTo(this.map);
+      .bindPopup(popupContent, { maxWidth: 250 });
 
+    this.markerClusterGroup.addLayer(marker);
     this.markers.push(marker);
     return marker;
   }
 
   clearMarkers(): void {
-    this.markers.forEach(marker => marker.remove());
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+    }
     this.markers = [];
   }
 
@@ -131,6 +143,10 @@ export class MapService implements OnDestroy {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
+    }
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.clearLayers();
+      this.markerClusterGroup = null;
     }
     if (this.map) {
       this.map.remove();
