@@ -341,14 +341,7 @@ export class PerfilPage implements OnInit {
   async deleteAccount() {
     this.deletingAccount = true;
     try {
-      const signals = await this.supabaseService.getUserSignals();
-
-      for (const signal of signals) {
-        if (signal.image_url) {
-          await this.storageService.deleteSignalImage(signal.image_url);
-        }
-      }
-
+      await this.storageService.deleteAllUserSignalImages();
       await this.supabaseService.deleteUserSignals();
       await this.storageService.deleteProfilePhoto();
 
