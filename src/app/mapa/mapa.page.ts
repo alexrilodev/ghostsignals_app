@@ -10,6 +10,7 @@ import {
   IonSpinner,
   IonFab,
   IonFabButton,
+  IonChip,
 } from '@ionic/angular/standalone';
 import { Geolocation } from '@capacitor/geolocation';
 import { Browser } from '@capacitor/browser';
@@ -32,6 +33,7 @@ import { SupabaseService, NearbySignal } from '../services/supabase.service';
     IonSpinner,
     IonFab,
     IonFabButton,
+    IonChip,
   ],
 })
 export class MapaPage implements OnInit, OnDestroy {
@@ -41,6 +43,13 @@ export class MapaPage implements OnInit, OnDestroy {
   loadingSignals = false;
   errorPermission = false;
   signals: NearbySignal[] = [];
+  selectedTags: string[] = [];
+  showTagFilter = false;
+
+  availableTags = [
+    'Arte', 'Música', 'Comida', 'Deporte', 'Cultura',
+    'Naturaleza', 'Fiesta', 'Turismo', 'Comercio', 'Servicios',
+  ];
   private addedSignalIds = new Set<string>();
 
   private mapInitialized = false;
@@ -140,6 +149,39 @@ export class MapaPage implements OnInit, OnDestroy {
     setTimeout(() => this.mapService.invalidateSize(), 1000);
   }
 
+  toggleTagFilter() {
+    this.showTagFilter = !this.showTagFilter;
+  }
+
+  toggleTag(tag: string) {
+    const index = this.selectedTags.indexOf(tag);
+    if (index === -1) {
+      this.selectedTags.push(tag);
+    } else {
+      this.selectedTags.splice(index, 1);
+    }
+    this.applyTagFilter();
+  }
+
+  isTagSelected(tag: string): boolean {
+    return this.selectedTags.includes(tag);
+  }
+
+  private applyTagFilter() {
+    this.mapService.clearMarkers();
+    this.addedSignalIds.clear();
+
+    const filtered = this.selectedTags.length > 0
+      ? this.signals.filter(s => s.tags.some(t => this.selectedTags.includes(t)))
+      : this.signals;
+
+    filtered.forEach(signal => {
+      const popupContent = this.createPopupContent(signal);
+      this.mapService.addSignalMarker(signal.latitude, signal.longitude, popupContent);
+      this.addedSignalIds.add(signal.id);
+    });
+  }
+
   async loadNearbySignals() {
     const center = this.mapService.getCenter();
     if (!center) return;
@@ -153,7 +195,11 @@ export class MapaPage implements OnInit, OnDestroy {
         5
       );
 
-      this.signals.forEach(signal => {
+      const filtered = this.selectedTags.length > 0
+        ? this.signals.filter(s => s.tags.some(t => this.selectedTags.includes(t)))
+        : this.signals;
+
+      filtered.forEach(signal => {
         if (!this.addedSignalIds.has(signal.id)) {
           const popupContent = this.createPopupContent(signal);
           this.mapService.addSignalMarker(

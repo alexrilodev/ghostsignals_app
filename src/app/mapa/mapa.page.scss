@@ -67,3 +67,30 @@ ion-spinner {
   height: 44px;
   --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
+
+.tags-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--ion-background-color, #fff);
+  border-bottom: 1px solid var(--ion-color-step-150, rgba(0, 0, 0, 0.08));
+
+  ion-chip {
+    --background: rgba(var(--ion-color-primary-rgb), 0.1);
+    cursor: pointer;
+    height: 28px;
+    font-size: 13px;
+    margin: 0;
+
+    &.selected {
+      --background: var(--ion-color-primary);
+      color: var(--ion-color-primary-contrast);
+    }
+  }
+}
