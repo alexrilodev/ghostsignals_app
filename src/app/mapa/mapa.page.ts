@@ -44,7 +44,6 @@ export class MapaPage implements OnInit, OnDestroy {
   errorPermission = false;
   signals: NearbySignal[] = [];
   selectedTags: string[] = [];
-  showTagFilter = false;
 
   availableTags = [
     'Arte', 'Música', 'Comida', 'Deporte', 'Cultura',
@@ -147,10 +146,6 @@ export class MapaPage implements OnInit, OnDestroy {
     setTimeout(() => this.mapService.invalidateSize(), 100);
     setTimeout(() => this.mapService.invalidateSize(), 300);
     setTimeout(() => this.mapService.invalidateSize(), 1000);
-  }
-
-  toggleTagFilter() {
-    this.showTagFilter = !this.showTagFilter;
   }
 
   toggleTag(tag: string) {
