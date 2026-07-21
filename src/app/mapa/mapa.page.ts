@@ -41,6 +41,7 @@ export class MapaPage implements OnInit, OnDestroy {
   loadingSignals = false;
   errorPermission = false;
   signals: NearbySignal[] = [];
+  private addedSignalIds = new Set<string>();
 
   private mapInitialized = false;
 
@@ -152,15 +153,16 @@ export class MapaPage implements OnInit, OnDestroy {
         5
       );
 
-      this.mapService.clearMarkers();
-
       this.signals.forEach(signal => {
-        const popupContent = this.createPopupContent(signal);
-        this.mapService.addSignalMarker(
-          signal.latitude,
-          signal.longitude,
-          popupContent
-        );
+        if (!this.addedSignalIds.has(signal.id)) {
+          const popupContent = this.createPopupContent(signal);
+          this.mapService.addSignalMarker(
+            signal.latitude,
+            signal.longitude,
+            popupContent
+          );
+          this.addedSignalIds.add(signal.id);
+        }
       });
     } catch (error) {
       console.error('Error loading signals:', error);
