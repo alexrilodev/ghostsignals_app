@@ -17,6 +17,9 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { MapService } from '../services/map.service';
 import { SupabaseService, NearbySignal } from '../services/supabase.service';
+import { AuthService } from '../services/auth.service';
+
+const PREFERRED_TAGS_PREFIX = 'ghostsignals_preferred_tags_';
 
 @Component({
   selector: 'app-mapa',
@@ -57,18 +60,24 @@ export class MapaPage implements OnInit, OnDestroy {
     private mapService: MapService,
     private supabaseService: SupabaseService,
     private ngZone: NgZone,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    this.loadPreferredTags();
     this.getCurrentPosition();
   }
 
   ionViewDidEnter() {
+    const prevTags = JSON.stringify(this.selectedTags);
+    this.loadPreferredTags();
+
     if (this.mapInitialized) {
       this.scheduleInvalidateSize();
-    } else if (this.latitude !== null && this.longitude !== null) {
-      this.initMap();
+      if (JSON.stringify(this.selectedTags) !== prevTags) {
+        this.applyTagFilter();
+      }
     }
   }
 
@@ -146,6 +155,19 @@ export class MapaPage implements OnInit, OnDestroy {
     setTimeout(() => this.mapService.invalidateSize(), 100);
     setTimeout(() => this.mapService.invalidateSize(), 300);
     setTimeout(() => this.mapService.invalidateSize(), 1000);
+  }
+
+  loadPreferredTags() {
+    const uid = this.authService.uid;
+    if (!uid) return;
+    const stored = localStorage.getItem(PREFERRED_TAGS_PREFIX + uid);
+    if (stored) {
+      try {
+        this.selectedTags = JSON.parse(stored);
+      } catch {
+        this.selectedTags = [];
+      }
+    }
   }
 
   toggleTag(tag: string) {
