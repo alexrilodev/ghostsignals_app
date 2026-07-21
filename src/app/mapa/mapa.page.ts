@@ -74,10 +74,10 @@ export class MapaPage implements OnInit, OnDestroy {
     this.loadPreferredTags();
 
     if (this.mapInitialized) {
+      this.mapService.clearMarkers();
+      this.addedSignalIds.clear();
       this.scheduleInvalidateSize();
-      if (JSON.stringify(this.selectedTags) !== prevTags) {
-        this.applyTagFilter();
-      }
+      this.loadNearbySignals();
     }
   }
 
