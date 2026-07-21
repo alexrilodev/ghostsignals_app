@@ -176,14 +176,9 @@ export class MapaPage implements OnInit, OnDestroy {
       .map(tag => `<span class="popup-tag">${tag}</span>`)
       .join('');
 
-    const distanceText = signal.distance < 1
-      ? `${Math.round(signal.distance * 1000)}m`
-      : `${signal.distance.toFixed(1)}km`;
-
     return `
       <div class="signal-popup">
         <h3>${signal.title}</h3>
-        <p class="popup-distance">${distanceText}</p>
         <p class="popup-description">${signal.description || ''}</p>
         <div class="popup-tags">${tagsHtml}</div>
         <a class="popup-link" data-signal-id="${signal.id}">Ver detalle</a>
