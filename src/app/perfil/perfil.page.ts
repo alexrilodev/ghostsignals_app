@@ -321,26 +321,50 @@ export class PerfilPage implements OnInit {
   }
 
   async confirmDeleteAccount() {
+    const isGoogle = this.authService.isGoogleProvider();
+
     const alert = await this.alertController.create({
       header: 'Eliminar Cuenta',
       subHeader: 'Esta acción es irreversible',
-      message:
-        'Se eliminarán permanentemente todas tus señales, fotos de perfil, imágenes de señales y tu cuenta de usuario. ¿Estás completamente seguro?',
+      message: isGoogle
+        ? 'Se eliminarán permanentemente todas tus señales, fotos de perfil, imágenes de señales y tu cuenta de usuario. Te pediremos confirmar con tu cuenta de Google.'
+        : 'Se eliminarán permanentemente todas tus señales, fotos de perfil, imágenes de señales y tu cuenta de usuario. Por seguridad, introduce tu contraseña:',
+      inputs: isGoogle ? [] : [
+        {
+          name: 'password',
+          type: 'password',
+          placeholder: 'Tu contraseña actual',
+        },
+      ],
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Eliminar mi cuenta',
           role: 'destructive',
-          handler: () => this.deleteAccount(),
+          handler: (data) => {
+            if (!isGoogle && !data.password) {
+              this.showToast('Debes introducir tu contraseña para confirmar');
+              return false;
+            }
+            this.deleteAccount(isGoogle ? null : data.password);
+            return true;
+          },
         },
       ],
     });
     await alert.present();
   }
 
-  async deleteAccount() {
+  async deleteAccount(password: string | null) {
     this.deletingAccount = true;
     try {
+      if (this.authService.isGoogleProvider()) {
+        await this.authService.reauthenticateWithGoogle();
+      } else {
+        if (!password) throw new Error('Falta contraseña');
+        await this.authService.reauthenticateWithEmail(this.userEmail, password);
+      }
+
       await this.storageService.deleteAllUserSignalImages();
       await this.supabaseService.deleteUserSignals();
       await this.storageService.deleteProfilePhoto();
@@ -355,8 +379,12 @@ export class PerfilPage implements OnInit {
       this.router.navigateByUrl('/login', { replaceUrl: true });
     } catch (error: any) {
       console.error('Error deleting account:', error);
-      if (error?.code === 'auth/requires-recent-login') {
-        this.showToast('Debes haber iniciado sesión recientemente. Cierra sesión y vuelve a iniciar para eliminar tu cuenta.');
+      if (error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential') {
+        this.showToast('La contraseña introducida es incorrecta');
+      } else if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') {
+        this.showToast('Has cancelado la verificación de Google');
+      } else if (error?.code === 'auth/requires-recent-login') {
+        this.showToast('Por favor, cierra sesión y vuelve a entrar para eliminar tu cuenta.');
       } else {
         this.showToast('Error al eliminar la cuenta');
       }

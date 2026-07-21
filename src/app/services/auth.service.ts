@@ -12,8 +12,11 @@ import {
   deleteUser,
   GoogleAuthProvider,
   OAuthProvider,
+  EmailAuthProvider,
   signInWithCredential,
   signInWithPopup,
+  reauthenticateWithPopup,
+  reauthenticateWithCredential,
 } from '@angular/fire/auth';
 import { Observable, of, switchMap } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
@@ -100,6 +103,25 @@ export class AuthService {
     const user = this.auth.currentUser;
     if (!user) throw new Error('User not authenticated');
     await deleteUser(user);
+  }
+
+  isGoogleProvider(): boolean {
+    const user = this.currentUser;
+    if (!user || !user.providerData) return false;
+    return user.providerData.some(provider => provider.providerId === 'google.com');
+  }
+
+  async reauthenticateWithGoogle(): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('No hay usuario autenticado');
+    await reauthenticateWithPopup(user, new GoogleAuthProvider());
+  }
+
+  async reauthenticateWithEmail(email: string, password: string): Promise<void> {
+    const user = this.currentUser;
+    if (!user) throw new Error('No hay usuario autenticado');
+    const credential = EmailAuthProvider.credential(email, password);
+    await reauthenticateWithCredential(user, credential);
   }
 
   async resetPassword(email: string): Promise<void> {
