@@ -1,6 +1,16 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as L from 'leaflet';
-import 'leaflet.markercluster';
+
+declare module 'leaflet' {
+  interface Map {
+    markerClusterGroup(options?: any): any;
+  }
+}
+
+async function ensureMarkerCluster(): Promise<void> {
+  (window as any).L = L;
+  await import('leaflet.markercluster');
+}
 
 @Injectable({
   providedIn: 'root',
@@ -31,7 +41,7 @@ export class MapService implements OnDestroy {
     shadowSize: [41, 41],
   });
 
-  initializeMap(containerId: string, latitude: number, longitude: number): L.Map {
+  async initializeMap(containerId: string, latitude: number, longitude: number): Promise<L.Map> {
     if (this.map) {
       this.destroy();
     }
@@ -54,13 +64,20 @@ export class MapService implements OnDestroy {
 
     L.control.zoom({ position: 'bottomright' }).addTo(this.map);
 
-    this.markerClusterGroup = L.markerClusterGroup({
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
-      maxClusterRadius: 30,
-    });
-    this.map.addLayer(this.markerClusterGroup);
+    try {
+      await ensureMarkerCluster();
+      if ((L as any).markerClusterGroup) {
+        this.markerClusterGroup = (L as any).markerClusterGroup({
+          spiderfyOnMaxZoom: true,
+          showCoverageOnHover: false,
+          zoomToBoundsOnClick: true,
+          maxClusterRadius: 30,
+        });
+        this.map.addLayer(this.markerClusterGroup!);
+      }
+    } catch (e) {
+      console.warn('MarkerCluster plugin failed to load, using plain markers:', e);
+    }
 
     let resizeTimeout: any;
     this.resizeObserver = new ResizeObserver(() => {
@@ -71,6 +88,7 @@ export class MapService implements OnDestroy {
     });
     this.resizeObserver.observe(container);
 
+    this.map.invalidateSize();
     return this.map;
   }
 
@@ -95,14 +113,18 @@ export class MapService implements OnDestroy {
     longitude: number,
     popupContent: string
   ): L.Marker {
-    if (!this.map || !this.markerClusterGroup) {
+    if (!this.map) {
       throw new Error('Map not initialized');
     }
 
     const marker = L.marker([latitude, longitude], { icon: this.defaultIcon })
       .bindPopup(popupContent, { maxWidth: 250 });
 
-    this.markerClusterGroup.addLayer(marker);
+    if (this.markerClusterGroup) {
+      this.markerClusterGroup.addLayer(marker);
+    } else {
+      marker.addTo(this.map);
+    }
     this.markers.push(marker);
     return marker;
   }
@@ -110,6 +132,12 @@ export class MapService implements OnDestroy {
   clearMarkers(): void {
     if (this.markerClusterGroup) {
       this.markerClusterGroup.clearLayers();
+    } else {
+      this.markers.forEach(m => {
+        if (this.map) {
+          this.map.removeLayer(m);
+        }
+      });
     }
     this.markers = [];
   }

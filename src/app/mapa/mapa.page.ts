@@ -13,8 +13,12 @@ import {
   IonChip,
 } from '@ionic/angular/standalone';
 import { Geolocation } from '@capacitor/geolocation';
-import { Browser } from '@capacitor/browser';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+interface SettingsPlugin {
+  openAppSettings(): Promise<void>;
+}
+const Settings = registerPlugin<SettingsPlugin>('Settings');
 import { MapService } from '../services/map.service';
 import { SupabaseService, NearbySignal } from '../services/supabase.service';
 import { AuthService } from '../services/auth.service';
@@ -89,12 +93,18 @@ export class MapaPage implements OnInit, OnDestroy {
     try {
       if (Capacitor.isNativePlatform()) {
         const permission = await Geolocation.requestPermissions();
+
         if (permission.location !== 'granted') {
           this.errorPermission = true;
           this.loading = false;
           return;
         }
-        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+
+        const position = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0,
+        });
         this.latitude = position.coords.latitude;
         this.longitude = position.coords.longitude;
       } else {
@@ -109,17 +119,22 @@ export class MapaPage implements OnInit, OnDestroy {
         this.longitude = position.coords.longitude;
       }
       this.loading = false;
-      if (!this.mapInitialized && this.latitude !== null) {
-        this.initMap();
-      }
-    } catch (error) {
-      console.error('Error getting location:', error);
+    } catch {
       this.errorPermission = true;
       this.loading = false;
+      return;
+    }
+
+    if (!this.mapInitialized && this.latitude !== null) {
+      try {
+        await this.initMap();
+      } catch (e) {
+        console.error('Error initializing map:', e);
+      }
     }
   }
 
-  private initMap() {
+  private async initMap() {
     if (this.latitude === null || this.longitude === null || this.mapInitialized) {
       return;
     }
@@ -127,7 +142,7 @@ export class MapaPage implements OnInit, OnDestroy {
     const mapEl = document.getElementById('map');
     if (!mapEl) return;
 
-    this.mapService.initializeMap('map', this.latitude!, this.longitude!);
+    await this.mapService.initializeMap('map', this.latitude!, this.longitude!);
     this.mapService.setUserMarker(this.latitude!, this.longitude!);
     this.mapInitialized = true;
 
@@ -250,7 +265,12 @@ export class MapaPage implements OnInit, OnDestroy {
   }
 
   async openSettings() {
-    await Browser.open({ url: 'app-settings:' });
+    const platform = Capacitor.getPlatform();
+    if (platform === 'android' || platform === 'ios') {
+      await Settings.openAppSettings();
+    } else {
+      window.location.href = 'about:blank';
+    }
   }
 
   async recenterOnUser() {
