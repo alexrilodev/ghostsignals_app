@@ -114,7 +114,14 @@ export class AuthService {
   async reauthenticateWithGoogle(): Promise<void> {
     const user = this.currentUser;
     if (!user) throw new Error('No hay usuario autenticado');
-    await reauthenticateWithPopup(user, new GoogleAuthProvider());
+    if (Capacitor.isNativePlatform()) {
+      const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      const credential = GoogleAuthProvider.credential(result.credential?.idToken);
+      await reauthenticateWithCredential(user, credential);
+    } else {
+      await reauthenticateWithPopup(user, new GoogleAuthProvider());
+    }
   }
 
   async reauthenticateWithEmail(email: string, password: string): Promise<void> {
