@@ -27,6 +27,10 @@ export interface NearbySignal extends Signal {
 export class SupabaseService {
   private supabase: SupabaseClient;
 
+  get client(): SupabaseClient {
+    return this.supabase;
+  }
+
   constructor(private authService: AuthService) {
     this.supabase = createClient(
       environment.supabase.url,
@@ -191,6 +195,27 @@ export class SupabaseService {
     if (error) {
       console.error('Error deleting user signals:', error);
       throw error;
+    }
+  }
+
+  async notifyNearbyUsers(signal: Signal): Promise<void> {
+    try {
+      const { data, error } = await this.supabase.functions.invoke('notify-signal', {
+        body: {
+          signal_id: signal.id,
+          user_id: signal.user_id,
+          title: `Nueva señal: ${signal.title}`,
+          body: signal.description?.substring(0, 100) || 'Una nueva señal ha sido creada cerca de ti',
+          latitude: signal.latitude,
+          longitude: signal.longitude,
+        },
+      });
+
+      if (error) {
+        console.error('Error notifying nearby users:', error);
+      }
+    } catch (error) {
+      console.error('Error invoking notify-signal:', error);
     }
   }
 }

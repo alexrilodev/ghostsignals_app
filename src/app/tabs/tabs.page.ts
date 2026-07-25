@@ -1,5 +1,6 @@
 import { Component, EnvironmentInjector, inject } from '@angular/core';
-import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/angular/standalone';
+import { CommonModule } from '@angular/common';
+import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   mapOutline,
@@ -23,15 +24,18 @@ import {
   moonOutline,
   phonePortraitOutline,
 } from 'ionicons/icons';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+  imports: [CommonModule, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge],
 })
 export class TabsPage {
   public environmentInjector = inject(EnvironmentInjector);
+  private notificationService = inject(NotificationService);
+  unreadCount = 0;
 
   constructor() {
     addIcons({
@@ -55,6 +59,10 @@ export class TabsPage {
       sunnyOutline,
       moonOutline,
       phonePortraitOutline,
+    });
+
+    this.notificationService.unreadCount$.subscribe(count => {
+      this.unreadCount = count;
     });
   }
 }

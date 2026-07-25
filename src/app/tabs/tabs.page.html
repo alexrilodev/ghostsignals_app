@@ -13,6 +13,7 @@
     <ion-tab-button tab="avisos" href="/tabs/avisos">
       <ion-icon aria-hidden="true" name="notifications-outline"></ion-icon>
       <ion-label>Avisos</ion-label>
+      <ion-badge *ngIf="unreadCount > 0" color="danger">{{unreadCount > 99 ? '99+' : unreadCount}}</ion-badge>
     </ion-tab-button>
 
     <ion-tab-button tab="perfil" href="/tabs/perfil">

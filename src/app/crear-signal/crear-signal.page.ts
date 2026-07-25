@@ -209,6 +209,7 @@ export class CrearSignalPage implements OnInit {
         }
       }
 
+      this.supabaseService.notifyNearbyUsers(signal).catch(() => {});
       this.showToast('Señal creada exitosamente');
       await this.router.navigate(['/tabs/mapa']);
     } catch (error) {

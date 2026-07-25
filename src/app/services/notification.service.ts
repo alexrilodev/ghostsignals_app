@@ -1,7 +1,9 @@
-import { Injectable, NgZone } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface AppNotification {
   id: string;
@@ -21,6 +23,10 @@ export class NotificationService {
 
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$: Observable<number> = this.unreadCountSubject.asObservable();
+
+  private authService = inject(AuthService);
+  private supabaseUrl = environment.supabase.url;
+  private supabaseKey = environment.supabase.anonKey;
 
   constructor(
     private router: Router,
@@ -105,7 +111,50 @@ export class NotificationService {
   }
 
   private async sendTokenToServer(token: string): Promise<void> {
-    console.log('Token to send to server:', token);
+    const user = this.authService.currentUser;
+    if (!user) return;
+
+    try {
+      const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/save_push_token`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          p_user_id: user.uid,
+          p_token: token,
+          p_platform: Capacitor.getPlatform(),
+        }),
+      });
+
+      if (response.ok) {
+        console.log('Push token saved successfully');
+      } else {
+        const error = await response.text();
+        console.error('Error saving push token:', error);
+      }
+    } catch (error) {
+      console.error('Error saving push token:', error);
+    }
+  }
+
+  async removeTokenFromServer(): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) return;
+
+    try {
+      await fetch(`${this.supabaseUrl}/rest/v1/rpc/delete_push_tokens`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_user_id: user.uid }),
+      });
+    } catch (error) {
+      console.error('Error removing push tokens:', error);
+    }
   }
 
   private addNotification(notification: AppNotification): void {
