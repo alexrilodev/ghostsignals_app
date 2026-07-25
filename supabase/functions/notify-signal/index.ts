@@ -88,7 +88,7 @@ async function sendFcmV1Message(
         message: {
           token,
           notification: { title, body },
-          data: { signalId },
+          data: { signalId, title, body },
           android: { priority: "high", notification: { sound: "default" } },
         },
       }),
@@ -127,7 +127,7 @@ serve(async (req) => {
 
     const { data: allTokens, error: tokensError } = await supabase
       .from("push_tokens")
-      .select("token")
+      .select("token, user_id")
       .neq("user_id", user_id || "");
 
     if (tokensError || !allTokens || allTokens.length === 0) {
@@ -149,6 +149,13 @@ serve(async (req) => {
       } else {
         errors.push(`${t.token.substring(0, 20)}...: ${result.error}`);
       }
+
+      await supabase.from("notifications").insert({
+        user_id: t.user_id,
+        title,
+        body,
+        signal_id,
+      });
     }
 
     return new Response(

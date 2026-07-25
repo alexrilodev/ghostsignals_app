@@ -27,6 +27,7 @@ export class NotificationService {
   private authService = inject(AuthService);
   private supabaseUrl = environment.supabase.url;
   private supabaseKey = environment.supabase.anonKey;
+  private listenersInitialized = false;
 
   constructor(
     private router: Router,
@@ -51,7 +52,10 @@ export class NotificationService {
       }
 
       await PushNotifications.register();
-      this.setupListeners();
+      if (!this.listenersInitialized) {
+        this.setupListeners();
+      }
+      this.fetchServerNotifications();
     } catch (error) {
       console.error('Error initializing push notifications:', error);
     }
@@ -86,13 +90,111 @@ export class NotificationService {
         });
       }
     );
+
+    this.listenersInitialized = true;
+  }
+
+  private async fetchServerNotifications(): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) return;
+
+    try {
+      const response = await fetch(
+        `${this.supabaseUrl}/rest/v1/notifications?user_id=eq.${user.uid}&read=eq.false&order=created_at.desc`,
+        {
+          headers: {
+            apikey: this.supabaseKey,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (!data || data.length === 0) return;
+
+      const existing = this.notificationsSubject.value;
+      const existingIds = new Set(existing.map(n => n.id));
+      const existingSignalIds = new Set(existing.filter(n => n.signalId).map(n => n.signalId));
+
+      for (const notif of data) {
+        if (!existingIds.has(notif.id) && (!notif.signal_id || !existingSignalIds.has(notif.signal_id))) {
+          const appNotification: AppNotification = {
+            id: notif.id,
+            title: notif.title,
+            body: notif.body,
+            signalId: notif.signal_id,
+            receivedAt: new Date(notif.created_at),
+            read: notif.read,
+          };
+          const current = this.notificationsSubject.value;
+          this.notificationsSubject.next([appNotification, ...current]);
+          this.unreadCountSubject.next(
+            this.notificationsSubject.value.filter(n => !n.read).length
+          );
+        }
+      }
+
+      this.saveNotifications(this.notificationsSubject.value);
+
+      const ids = data.map((n: any) => n.id);
+      if (ids.length > 0) {
+        await fetch(
+          `${this.supabaseUrl}/rest/v1/notifications?id=in.(${ids.join(',')})`,
+          {
+            method: 'PATCH',
+            headers: {
+              apikey: this.supabaseKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ read: true }),
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Error fetching server notifications:', error);
+    }
+  }
+
+  private async loadDeliveredNotifications(): Promise<void> {
+    try {
+      const { PushNotifications } = await import('@capacitor/push-notifications');
+      const delivered = await PushNotifications.getDeliveredNotifications();
+
+      if (delivered?.notifications && delivered.notifications.length > 0) {
+        const existing = this.notificationsSubject.value;
+        const existingIds = new Set(existing.map(n => n.id));
+        const existingSignalIds = new Set(existing.filter(n => n.signalId).map(n => n.signalId));
+
+        for (const notif of delivered.notifications) {
+          const id = notif.id?.toString() || '';
+          const signalId = notif.data?.['signalId'];
+          if (!existingIds.has(id) && (!signalId || !existingSignalIds.has(signalId))) {
+            const appNotification: AppNotification = {
+              id,
+              title: notif.title || notif.data?.['title'] || 'Nueva notificación',
+              body: notif.body || notif.data?.['body'] || '',
+              signalId: notif.data?.['signalId'],
+              receivedAt: new Date(),
+              read: false,
+            };
+            this.addNotification(appNotification);
+          }
+        }
+
+        PushNotifications.removeAllDeliveredNotifications();
+      }
+    } catch (error) {
+      console.error('Error loading delivered notifications:', error);
+    }
   }
 
   private handleForegroundNotification(notification: any): void {
     const appNotification: AppNotification = {
       id: notification.id?.toString() || Date.now().toString(),
-      title: notification.title || 'Nueva notificación',
-      body: notification.body || '',
+      title: notification.title || notification.data?.['title'] || 'Nueva notificación',
+      body: notification.body || notification.data?.['body'] || '',
       signalId: notification.data?.['signalId'],
       receivedAt: new Date(),
       read: false,
@@ -104,6 +206,16 @@ export class NotificationService {
   private handleNotificationAction(action: any): void {
     const notification = action.notification;
     const signalId = notification.data?.['signalId'];
+
+    const appNotification: AppNotification = {
+      id: notification.id?.toString() || Date.now().toString(),
+      title: notification.title || notification.data?.['title'] || 'Nueva notificación',
+      body: notification.body || notification.data?.['body'] || '',
+      signalId,
+      receivedAt: new Date(),
+      read: false,
+    };
+    this.addNotification(appNotification);
 
     if (signalId) {
       this.router.navigate(['/tabs/mapa'], { queryParams: { signalId } });
@@ -159,6 +271,8 @@ export class NotificationService {
 
   private addNotification(notification: AppNotification): void {
     const current = this.notificationsSubject.value;
+    if (current.some(n => n.id === notification.id)) return;
+    if (notification.signalId && current.some(n => n.signalId === notification.signalId)) return;
     const updated = [notification, ...current];
     this.notificationsSubject.next(updated);
     this.unreadCountSubject.next(updated.filter(n => !n.read).length);
