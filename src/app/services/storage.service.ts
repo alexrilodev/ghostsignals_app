@@ -131,4 +131,64 @@ export class StorageService {
       console.error('Error deleting profile photo:', error);
     }
   }
+
+  async downloadAndUploadGooglePhoto(googlePhotoUrl: string): Promise<string | null> {
+    const user = this.authService.currentUser;
+    if (!user || !googlePhotoUrl) return null;
+
+    try {
+      const existingUrl = await this.getProfilePhotoUrl();
+      if (existingUrl) return null;
+
+      const response = await fetch(googlePhotoUrl);
+      if (!response.ok) return null;
+
+      const blob = await response.blob();
+      const ext = blob.type.includes('png') ? 'png' : 'jpeg';
+      const fileName = `${user.uid}.${ext}`;
+      const contentType = `image/${ext}`;
+
+      await this.supabase.storage
+        .from('profiles')
+        .remove([`${user.uid}.jpeg`, `${user.uid}.png`, `${user.uid}.webp`, `${user.uid}.gif`])
+        .catch(() => {});
+
+      const { error } = await this.supabase.storage
+        .from('profiles')
+        .upload(fileName, blob, { contentType });
+
+      if (error) {
+        console.error('Error uploading Google photo:', error);
+        return null;
+      }
+
+      const { data } = this.supabase.storage
+        .from('profiles')
+        .getPublicUrl(fileName);
+
+      return data.publicUrl + '?t=' + Date.now();
+    } catch (error) {
+      console.error('Error syncing Google photo:', error);
+      return null;
+    }
+  }
+
+  async getProfilePhotoUrl(): Promise<string | null> {
+    const user = this.authService.currentUser;
+    if (!user) return null;
+
+    for (const ext of ['png', 'jpeg', 'webp', 'gif']) {
+      const { data } = await this.supabase.storage
+        .from('profiles')
+        .list('', { search: `${user.uid}.${ext}` });
+
+      if (data && data.length > 0) {
+        const { data: urlData } = this.supabase.storage
+          .from('profiles')
+          .getPublicUrl(`${user.uid}.${ext}`);
+        return urlData.publicUrl;
+      }
+    }
+    return null;
+  }
 }

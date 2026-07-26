@@ -113,6 +113,15 @@ export class PerfilPage implements OnInit {
       this.userName = user.displayName || '';
       this.userEmail = user.email || '';
       this.userPhoto = user.photoURL || null;
+
+      if (user.photoURL && user.photoURL.includes('googleusercontent.com') && this.authService.isGoogleProvider()) {
+        this.storageService.downloadAndUploadGooglePhoto(user.photoURL).then(url => {
+          if (url) {
+            this.authService.updatePhotoURL(url);
+            this.userPhoto = url;
+          }
+        });
+      }
     }
   }
 

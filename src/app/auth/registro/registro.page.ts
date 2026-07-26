@@ -15,6 +15,7 @@ import {
   IonSpinner,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../../services/auth.service';
+import { StorageService } from '../../services/storage.service';
 
 @Component({
   selector: 'app-registro',
@@ -48,6 +49,7 @@ export class RegistroPage {
 
   constructor(
     private authService: AuthService,
+    private storageService: StorageService,
     private router: Router
   ) {}
 
@@ -86,7 +88,12 @@ export class RegistroPage {
     this.error = '';
 
     try {
-      await this.authService.loginWithGoogle();
+      const user = await this.authService.loginWithGoogle();
+      if (user.photoURL) {
+        this.storageService.downloadAndUploadGooglePhoto(user.photoURL).then(url => {
+          if (url) this.authService.updatePhotoURL(url);
+        });
+      }
       this.router.navigateByUrl('/tabs/mapa', { replaceUrl: true });
     } catch (e: any) {
       this.error = 'Error al registrarse con Google';
