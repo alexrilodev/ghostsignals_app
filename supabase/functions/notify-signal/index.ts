@@ -125,14 +125,24 @@ serve(async (req) => {
       );
     }
 
-    const { data: allTokens, error: tokensError } = await supabase
-      .from("push_tokens")
-      .select("token, user_id")
-      .neq("user_id", user_id || "");
+    const { data: nearbyTokens, error: tokensError } = await supabase
+      .rpc("get_nearby_push_tokens", {
+        p_latitude: latitude,
+        p_longitude: longitude,
+        p_radius_km: 5,
+        p_exclude_user_id: user_id || null,
+      });
 
-    if (tokensError || !allTokens || allTokens.length === 0) {
+    if (tokensError) {
       return new Response(
-        JSON.stringify({ message: "No recipients found", sent: 0 }),
+        JSON.stringify({ error: "RPC failed", details: tokensError }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!nearbyTokens || nearbyTokens.length === 0) {
+      return new Response(
+        JSON.stringify({ message: "No nearby recipients found", sent: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -142,7 +152,7 @@ serve(async (req) => {
     let sent = 0;
     const errors: string[] = [];
 
-    for (const t of allTokens) {
+    for (const t of nearbyTokens) {
       const result = await sendFcmV1Message(accessToken, t.token, title, body, signal_id);
       if (result.ok) {
         sent++;
@@ -159,7 +169,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ sent, total: allTokens.length, errors: errors.length > 0 ? errors : undefined }),
+      JSON.stringify({ sent, total: nearbyTokens.length, errors: errors.length > 0 ? errors : undefined }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

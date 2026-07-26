@@ -200,18 +200,28 @@ export class SupabaseService {
 
   async notifyNearbyUsers(signal: Signal): Promise<void> {
     try {
-      const { data, error } = await this.supabase.functions.invoke('notify-signal', {
-        body: {
-          signal_id: signal.id,
-          user_id: signal.user_id,
-          title: `Nueva señal: ${signal.title}`,
-          body: signal.description?.substring(0, 100) || 'Una nueva señal ha sido creada cerca de ti',
-          latitude: signal.latitude,
-          longitude: signal.longitude,
-        },
-      });
+      const response = await fetch(
+        `${environment.supabase.url}/functions/v1/notify-signal`,
+        {
+          method: 'POST',
+          headers: {
+            apikey: environment.supabase.anonKey,
+            Authorization: `Bearer ${environment.supabase.anonKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            signal_id: signal.id,
+            user_id: signal.user_id,
+            title: `Nueva señal: ${signal.title}`,
+            body: signal.description?.substring(0, 100) || 'Una nueva señal ha sido creada cerca de ti',
+            latitude: signal.latitude,
+            longitude: signal.longitude,
+          }),
+        }
+      );
 
-      if (error) {
+      if (!response.ok) {
+        const error = await response.text();
         console.error('Error notifying nearby users:', error);
       }
     } catch (error) {

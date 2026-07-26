@@ -1,6 +1,7 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Router } from '@angular/router';
+import { Geolocation } from '@capacitor/geolocation';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
@@ -61,12 +62,32 @@ export class NotificationService {
     }
   }
 
+  private async getCurrentPosition(): Promise<{ latitude: number; longitude: number } | null> {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        return { latitude: position.coords.latitude, longitude: position.coords.longitude };
+      } else {
+        return new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+            () => resolve(null),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          );
+        });
+      }
+    } catch {
+      return null;
+    }
+  }
+
   private async setupListeners(): Promise<void> {
     const { PushNotifications } = await import('@capacitor/push-notifications');
 
-    PushNotifications.addListener('registration', (token) => {
+    PushNotifications.addListener('registration', async (token) => {
       console.log('Push registration success, token:', token.value);
-      this.sendTokenToServer(token.value);
+      const position = await this.getCurrentPosition();
+      this.sendTokenToServer(token.value, position?.latitude, position?.longitude);
     });
 
     PushNotifications.addListener('registrationError', (error: any) => {
@@ -222,7 +243,7 @@ export class NotificationService {
     }
   }
 
-  private async sendTokenToServer(token: string): Promise<void> {
+  private async sendTokenToServer(token: string, latitude?: number, longitude?: number): Promise<void> {
     const user = this.authService.currentUser;
     if (!user) return;
 
@@ -237,6 +258,8 @@ export class NotificationService {
           p_user_id: user.uid,
           p_token: token,
           p_platform: Capacitor.getPlatform(),
+          p_latitude: latitude ?? null,
+          p_longitude: longitude ?? null,
         }),
       });
 
