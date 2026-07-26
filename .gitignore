@@ -75,3 +75,6 @@ Thumbs.db
 .firebase/
 google-services.json
 GoogleService-Info.plist
+
+# Supabase temp
+supabase/.temp/
