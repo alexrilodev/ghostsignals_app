@@ -44,6 +44,7 @@ export class SignalDetailPage implements OnInit {
   loading = true;
   isOwner = false;
   distance: string | null = null;
+  imageModalOpen = false;
   private signalId = '';
 
   constructor(
@@ -206,6 +207,14 @@ export class SignalDetailPage implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  openImageModal() {
+    this.imageModalOpen = true;
+  }
+
+  closeImageModal() {
+    this.imageModalOpen = false;
   }
 
   async showToast(message: string) {

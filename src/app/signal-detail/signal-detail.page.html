@@ -25,7 +25,7 @@
   } @else if (signal) {
     <div class="detail-content">
       @if (signal.image_url) {
-        <div class="signal-image">
+        <div class="signal-image" (click)="openImageModal()">
           <img [src]="signal.image_url" [alt]="signal.title">
         </div>
       }
@@ -73,6 +73,12 @@
     <div class="empty-state">
       <ion-icon name="warning-outline" class="empty-icon"></ion-icon>
       <p>Señal no encontrada</p>
+    </div>
+  }
+
+  @if (imageModalOpen) {
+    <div class="image-modal" (click)="closeImageModal()">
+      <img [src]="signal?.image_url" [alt]="signal?.title">
     </div>
   }
 </ion-content>
