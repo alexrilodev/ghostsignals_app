@@ -23,6 +23,7 @@ import {
   sunnyOutline,
   moonOutline,
   phonePortraitOutline,
+  refresh,
 } from 'ionicons/icons';
 import { NotificationService } from '../services/notification.service';
 
@@ -59,6 +60,7 @@ export class TabsPage {
       sunnyOutline,
       moonOutline,
       phonePortraitOutline,
+      refresh,
     });
 
     this.notificationService.unreadCount$.subscribe(count => {

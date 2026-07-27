@@ -180,6 +180,12 @@ export class MapService implements OnDestroy {
       this.map.remove();
       this.map = null;
     }
+    this.markers = [];
+    this.userMarker = null;
+  }
+
+  destroyMap() {
+    this.destroy();
   }
 
   ngOnDestroy() {

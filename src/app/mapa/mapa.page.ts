@@ -273,6 +273,17 @@ export class MapaPage implements OnInit, OnDestroy {
     }
   }
 
+  async reloadMap() {
+    this.mapService.destroyMap();
+    this.mapInitialized = false;
+    this.latitude = null;
+    this.longitude = null;
+    this.errorPermission = false;
+    this.signals = [];
+    this.addedSignalIds.clear();
+    await this.getCurrentPosition();
+  }
+
   async recenterOnUser() {
     if (this.latitude === null || this.longitude === null) return;
 
