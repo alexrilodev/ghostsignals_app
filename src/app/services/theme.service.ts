@@ -1,4 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -67,6 +69,7 @@ const DARK_VARS: Record<string, string> = {
   '--ion-card-background': '#1e1e1e',
   '--ion-toolbar-background': '#1f1f1f',
   '--ion-toolbar-border-color': '#363636',
+  '--ghost-tags-bar-bg': '#1a1a1a',
 };
 
 @Injectable({
@@ -103,7 +106,7 @@ export class ThemeService implements OnDestroy {
     this.applyTheme();
   }
 
-  private applyTheme() {
+  private async applyTheme() {
     const root = document.documentElement;
     if (this.isDark) {
       for (const [prop, value] of Object.entries(DARK_VARS)) {
@@ -115,6 +118,12 @@ export class ThemeService implements OnDestroy {
         root.style.removeProperty(prop);
       }
       document.body.classList.remove('ion-palette-dark');
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await StatusBar.setStyle({ style: this.isDark ? Style.Dark : Style.Light });
+      } catch {}
     }
   }
 
