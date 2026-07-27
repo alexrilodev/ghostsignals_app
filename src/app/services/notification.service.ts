@@ -39,26 +39,28 @@ export class NotificationService {
 
   async initialize(): Promise<void> {
     if (!Capacitor.isNativePlatform()) {
-      console.warn('Push notifications only available on native devices');
+      console.warn('[Push] Not native platform, skipping');
       return;
     }
 
     try {
       const { PushNotifications } = await import('@capacitor/push-notifications');
+      console.log('[Push] Module loaded');
 
       const permission = await PushNotifications.requestPermissions();
+      console.log('[Push] Permission:', permission.receive);
       if (permission.receive !== 'granted') {
-        console.warn('Push notification permission denied');
+        console.warn('[Push] Permission denied');
         return;
       }
 
+      await this.setupListeners();
+      console.log('[Push] Listeners registered, calling register()');
       await PushNotifications.register();
-      if (!this.listenersInitialized) {
-        this.setupListeners();
-      }
+      console.log('[Push] register() completed');
       this.fetchServerNotifications();
     } catch (error) {
-      console.error('Error initializing push notifications:', error);
+      console.error('[Push] Error initializing:', error);
     }
   }
 
@@ -85,13 +87,14 @@ export class NotificationService {
     const { PushNotifications } = await import('@capacitor/push-notifications');
 
     PushNotifications.addListener('registration', async (token) => {
-      console.log('Push registration success, token:', token.value);
+      console.log('[Push] Registration success, token:', token.value.substring(0, 30) + '...');
       const position = await this.getCurrentPosition();
+      console.log('[Push] Position:', position);
       this.sendTokenToServer(token.value, position?.latitude, position?.longitude);
     });
 
     PushNotifications.addListener('registrationError', (error: any) => {
-      console.error('Push registration error:', error);
+      console.error('[Push] Registration error:', error);
     });
 
     PushNotifications.addListener(
@@ -245,6 +248,7 @@ export class NotificationService {
 
   private async sendTokenToServer(token: string, latitude?: number, longitude?: number): Promise<void> {
     const user = this.authService.currentUser;
+    console.log('[Push] sendTokenToServer - user:', user?.uid || 'NULL');
     if (!user) return;
 
     try {
