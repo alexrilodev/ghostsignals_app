@@ -35,6 +35,7 @@ export class NotificationService {
     private ngZone: NgZone
   ) {
     this.loadNotifications();
+    setTimeout(() => this.fetchServerNotifications(), 2000);
   }
 
   async initialize(): Promise<void> {
@@ -85,6 +86,14 @@ export class NotificationService {
 
   private async setupListeners(): Promise<void> {
     const { PushNotifications } = await import('@capacitor/push-notifications');
+    const { App } = await import('@capacitor/app');
+
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        console.log('[Notif] App resumed, fetching notifications');
+        this.fetchServerNotifications();
+      }
+    });
 
     PushNotifications.addListener('registration', async (token) => {
       console.log('[Push] Registration success, token:', token.value.substring(0, 30) + '...');
@@ -118,31 +127,69 @@ export class NotificationService {
     this.listenersInitialized = true;
   }
 
-  private async fetchServerNotifications(): Promise<void> {
+  private async patchSupabaseRead(signalId?: string): Promise<void> {
+    if (!signalId) return;
     const user = this.authService.currentUser;
     if (!user) return;
+    try {
+      console.log('[Notif] Marking as read in Supabase:', signalId);
+      const resp = await fetch(`${this.supabaseUrl}/rest/v1/rpc/mark_notifications_read`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_user_id: user.uid, p_signal_id: signalId }),
+      });
+      console.log('[Notif] mark_notifications_read status:', resp.status);
+      if (!resp.ok) {
+        const err = await resp.text();
+        console.error('[Notif] mark_notifications_read error:', err);
+      }
+    } catch (error) {
+      console.error('Error patching Supabase read:', error);
+    }
+  }
+
+  private async fetchServerNotifications(): Promise<void> {
+    const user = this.authService.currentUser;
+    if (!user) {
+      console.log('[Notif] fetchServerNotifications: no user');
+      return;
+    }
 
     try {
-      const response = await fetch(
-        `${this.supabaseUrl}/rest/v1/notifications?user_id=eq.${user.uid}&read=eq.false&order=created_at.desc`,
-        {
-          headers: {
-            apikey: this.supabaseKey,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      console.log('[Notif] Fetching notifications for user:', user.uid);
+      const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/get_user_notifications`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_user_id: user.uid }),
+      });
 
-      if (!response.ok) return;
+      console.log('[Notif] Response status:', response.status);
+      if (!response.ok) {
+        const err = await response.text();
+        console.error('[Notif] RPC error:', err);
+        return;
+      }
 
       const data = await response.json();
-      if (!data || data.length === 0) return;
+      console.log('[Notif] RPC returned:', data?.length, 'notifications');
+
+      const unreadServerIds = new Set(
+        data.filter((n: any) => !n.read).map((n: any) => n.id)
+      );
 
       const existing = this.notificationsSubject.value;
       const existingIds = new Set(existing.map(n => n.id));
       const existingSignalIds = new Set(existing.filter(n => n.signalId).map(n => n.signalId));
 
       for (const notif of data) {
+        if (notif.read) continue;
+        if (existingIds.has(notif.id) && existingSignalIds.has(notif.signal_id)) continue;
         if (!existingIds.has(notif.id) && (!notif.signal_id || !existingSignalIds.has(notif.signal_id))) {
           const appNotification: AppNotification = {
             id: notif.id,
@@ -150,7 +197,7 @@ export class NotificationService {
             body: notif.body,
             signalId: notif.signal_id,
             receivedAt: new Date(notif.created_at),
-            read: notif.read,
+            read: false,
           };
           const current = this.notificationsSubject.value;
           this.notificationsSubject.next([appNotification, ...current]);
@@ -160,22 +207,19 @@ export class NotificationService {
         }
       }
 
-      this.saveNotifications(this.notificationsSubject.value);
+      const updated = this.notificationsSubject.value.map(n => {
+        if (unreadServerIds.has(n.id) || (n.signalId && data.some((s: any) => s.signal_id === n.signalId && !s.read))) {
+          return n;
+        }
+        return { ...n, read: true };
+      });
 
-      const ids = data.map((n: any) => n.id);
-      if (ids.length > 0) {
-        await fetch(
-          `${this.supabaseUrl}/rest/v1/notifications?id=in.(${ids.join(',')})`,
-          {
-            method: 'PATCH',
-            headers: {
-              apikey: this.supabaseKey,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ read: true }),
-          }
-        );
+      if (updated.some((n, i) => n.read !== this.notificationsSubject.value[i]?.read)) {
+        this.notificationsSubject.next(updated);
+        this.unreadCountSubject.next(updated.filter(n => !n.read).length);
       }
+
+      this.saveNotifications(this.notificationsSubject.value);
     } catch (error) {
       console.error('Error fetching server notifications:', error);
     }
@@ -308,20 +352,26 @@ export class NotificationService {
 
   markAsRead(notificationId: string): void {
     const current = this.notificationsSubject.value;
+    const notification = current.find(n => n.id === notificationId);
     const updated = current.map(n =>
       n.id === notificationId ? { ...n, read: true } : n
     );
     this.notificationsSubject.next(updated);
     this.unreadCountSubject.next(updated.filter(n => !n.read).length);
     this.saveNotifications(updated);
+    if (notification?.signalId) {
+      this.patchSupabaseRead(notification.signalId);
+    }
   }
 
   markAllAsRead(): void {
     const current = this.notificationsSubject.value;
+    const unreadSignalIds = current.filter(n => n.signalId && !n.read).map(n => n.signalId!);
     const updated = current.map(n => ({ ...n, read: true }));
     this.notificationsSubject.next(updated);
     this.unreadCountSubject.next(0);
     this.saveNotifications(updated);
+    unreadSignalIds.forEach(sid => this.patchSupabaseRead(sid));
   }
 
   clearAll(): void {

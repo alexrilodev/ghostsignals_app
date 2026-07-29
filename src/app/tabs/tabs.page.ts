@@ -1,4 +1,4 @@
-import { Component, EnvironmentInjector, inject } from '@angular/core';
+import { Component, EnvironmentInjector, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -36,6 +36,7 @@ import { NotificationService } from '../services/notification.service';
 export class TabsPage {
   public environmentInjector = inject(EnvironmentInjector);
   private notificationService = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
   unreadCount = 0;
 
   constructor() {
@@ -65,6 +66,7 @@ export class TabsPage {
 
     this.notificationService.unreadCount$.subscribe(count => {
       this.unreadCount = count;
+      this.cdr.detectChanges();
     });
   }
 }
