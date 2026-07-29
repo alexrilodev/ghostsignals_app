@@ -104,4 +104,17 @@ ion-spinner {
       color: var(--ion-color-primary-contrast);
     }
   }
+
+  .signal-count {
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+    border-radius: 12px;
+    padding: 2px 10px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
 }

@@ -44,6 +44,7 @@ export class ExplorarPage implements OnInit {
   loading = true;
   selectedTags: string[] = [];
   searchText = '';
+  signalCount = 0;
 
   availableTags = [
     'Arte',
@@ -131,13 +132,14 @@ export class ExplorarPage implements OnInit {
   private applySearchFilter() {
     if (!this.searchText) {
       this.filteredSignals = [...this.signals];
-      return;
+    } else {
+      this.filteredSignals = this.signals.filter(
+        (s) =>
+          s.title.toLowerCase().includes(this.searchText) ||
+          s.description.toLowerCase().includes(this.searchText)
+      );
     }
-    this.filteredSignals = this.signals.filter(
-      (s) =>
-        s.title.toLowerCase().includes(this.searchText) ||
-        s.description.toLowerCase().includes(this.searchText)
-    );
+    this.signalCount = this.filteredSignals.length;
   }
 
   getTimeAgo(dateStr: string): string {

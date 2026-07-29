@@ -51,6 +51,7 @@ export class MapaPage implements OnInit, OnDestroy {
   errorPermission = false;
   signals: NearbySignal[] = [];
   selectedTags: string[] = [];
+  filteredCount = 0;
 
   availableTags = [
     'Arte', 'Música', 'Comida', 'Deporte', 'Cultura',
@@ -207,6 +208,8 @@ export class MapaPage implements OnInit, OnDestroy {
       ? this.signals.filter(s => s.tags.some(t => this.selectedTags.includes(t)))
       : this.signals;
 
+    this.filteredCount = filtered.length;
+
     filtered.forEach(signal => {
       const popupContent = this.createPopupContent(signal);
       this.mapService.addSignalMarker(signal.latitude, signal.longitude, popupContent);
@@ -230,6 +233,8 @@ export class MapaPage implements OnInit, OnDestroy {
       const filtered = this.selectedTags.length > 0
         ? this.signals.filter(s => s.tags.some(t => this.selectedTags.includes(t)))
         : this.signals;
+
+      this.filteredCount = filtered.length;
 
       filtered.forEach(signal => {
         if (!this.addedSignalIds.has(signal.id)) {
