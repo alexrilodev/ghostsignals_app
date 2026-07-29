@@ -28,7 +28,7 @@
     </div>
 
     <div class="section">
-      <h3>Mis Señales</h3>
+      <h3>Mis señales <span class="signal-count">{{ mySignalsCount }}</span></h3>
       @if (loadingSignals) {
         <div class="signals-loading">
           <ion-spinner name="crescent"></ion-spinner>
@@ -36,7 +36,6 @@
       } @else if (mySignalsCount === 0) {
         <p class="empty-signals">No has creado ninguna señal aún.</p>
       } @else {
-        <p class="signals-count">{{ mySignalsCount }} señal{{ mySignalsCount !== 1 ? 'es' : '' }}</p>
         <div class="signals-list">
           @for (signal of mySignals; track signal.id) {
             <div class="signal-card">

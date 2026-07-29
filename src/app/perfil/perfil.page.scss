@@ -74,6 +74,9 @@
     margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .section-description {
@@ -81,18 +84,24 @@
     font-size: 13px;
     color: var(--ion-color-medium);
   }
+
+  .signal-count {
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--ion-color-primary);
+    color: var(--ion-color-primary-contrast);
+    border-radius: 12px;
+    padding: 2px 10px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+  }
 }
 
 .signals-loading {
   display: flex;
   justify-content: center;
   padding: 16px;
-}
-
-.signals-count {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--ion-color-medium);
 }
 
 .empty-signals {
