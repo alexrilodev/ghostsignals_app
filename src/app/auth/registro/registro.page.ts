@@ -13,7 +13,10 @@ import {
   IonButton,
   IonText,
   IonSpinner,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { eye, eyeOff } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 import { StorageService } from '../../services/storage.service';
 
@@ -35,6 +38,7 @@ import { StorageService } from '../../services/storage.service';
     IonButton,
     IonText,
     IonSpinner,
+    IonIcon,
   ],
 })
 export class RegistroPage {
@@ -42,6 +46,8 @@ export class RegistroPage {
   email = '';
   password = '';
   confirmPassword = '';
+  showPassword = false;
+  showConfirmPassword = false;
   loading = false;
   loadingGoogle = false;
   loadingApple = false;
@@ -51,7 +57,9 @@ export class RegistroPage {
     private authService: AuthService,
     private storageService: StorageService,
     private router: Router
-  ) {}
+  ) {
+    addIcons({ eye, 'eye-off': eyeOff });
+  }
 
   async register() {
     if (!this.name.trim() || !this.email || !this.password || !this.confirmPassword) {

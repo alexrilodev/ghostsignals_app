@@ -13,7 +13,10 @@ import {
   IonButton,
   IonText,
   IonSpinner,
+  IonIcon,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { eye, eyeOff } from 'ionicons/icons';
 import { AuthService } from '../../services/auth.service';
 import { StorageService } from '../../services/storage.service';
 
@@ -35,11 +38,13 @@ import { StorageService } from '../../services/storage.service';
     IonButton,
     IonText,
     IonSpinner,
+    IonIcon,
   ],
 })
 export class LoginPage {
   email = '';
   password = '';
+  showPassword = false;
   loading = false;
   loadingGoogle = false;
   loadingApple = false;
@@ -49,7 +54,9 @@ export class LoginPage {
     private authService: AuthService,
     private storageService: StorageService,
     private router: Router
-  ) {}
+  ) {
+    addIcons({ eye, 'eye-off': eyeOff });
+  }
 
   async login() {
     if (!this.email || !this.password) {

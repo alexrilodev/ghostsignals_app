@@ -56,16 +56,23 @@
         ></ion-input>
       </ion-item>
 
-      <ion-item>
-        <ion-label position="floating">Contraseña</ion-label>
-        <ion-input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          required
-          autocomplete="current-password"
-        ></ion-input>
-      </ion-item>
+      <div class="password-field">
+        <ion-item>
+          <ion-label position="floating">Contraseña</ion-label>
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            required
+            autocomplete="current-password"
+          ></ion-input>
+        </ion-item>
+        <ion-icon
+          class="password-toggle"
+          [name]="showPassword ? 'eye-off' : 'eye'"
+          (click)="showPassword = !showPassword"
+        ></ion-icon>
+      </div>
 
       @if (error) {
         <ion-text color="danger" class="error-text">
