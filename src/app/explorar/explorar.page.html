@@ -14,13 +14,6 @@
     <ion-toolbar>
       <ion-title size="large">Explorar</ion-title>
     </ion-toolbar>
-    <ion-toolbar>
-      <ion-searchbar
-        placeholder="Buscar señales..."
-        (ionInput)="onSearch($event)"
-        [debounce]="300"
-      ></ion-searchbar>
-    </ion-toolbar>
   </ion-header>
 
   <div class="explore-content">
@@ -38,6 +31,12 @@
         <span class="signal-count">{{ signalCount }}</span>
       </div>
     </div>
+
+    <ion-searchbar
+      placeholder="Buscar señales..."
+      (ionInput)="onSearch($event)"
+      [debounce]="300"
+    ></ion-searchbar>
 
     <div class="signals-section">
       <h3>Señales recientes</h3>

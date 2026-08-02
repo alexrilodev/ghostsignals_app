@@ -1,5 +1,13 @@
 .explore-content {
   padding: 16px;
+
+  ion-searchbar {
+    padding: 0;
+    margin-bottom: 16px;
+    --color: var(--ion-text-color);
+    --placeholder-color: var(--ion-color-medium);
+    --icon-color: var(--ion-color-medium);
+  }
 }
 
 .tags-section {
